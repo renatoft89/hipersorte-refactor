@@ -1,5 +1,8 @@
+import Navbar from "@/components/Navbar";
+
 export default function Home() {
   return (
-    <div>Aplication</div>
+    <><Navbar /><div>Aplication</div></>
+
   );
 }
