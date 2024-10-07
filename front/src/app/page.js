@@ -1,16 +1,12 @@
 import Navbar from "@/components/Navbar";
-import Lotofacil from '../components/Lotofacil.js';
-import Mega from '../components/Mega.js';
-import Quina from '../components/Quina.js'
+import Lotofacil from './lotofacil/page.js';
+import Mega from './mega/page.js';
+import Quina from './quina/page.js'
 
 export default function Home() {
   return (
     <>
-      <Navbar />
-      <Lotofacil />
-      <Mega />
-      <Quina />
-      <div>Aplication</div>
+      <h2 className="text-center pt-10">Bem-vindo ao Hipersorte!</h2>
     </>
 
   );
