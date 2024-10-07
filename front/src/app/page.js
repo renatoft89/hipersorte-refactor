@@ -6,7 +6,7 @@ import Quina from './quina/page.js'
 export default function Home() {
   return (
     <>
-      <h2 className="text-center pt-10">Bem-vindo ao Hipersorte!</h2>
+      <h2 className="font-semibold text-center pt-10">Bem-vindo ao Hipersorte!</h2>
     </>
 
   );

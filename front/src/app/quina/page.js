@@ -21,7 +21,7 @@ const Quina = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center">
       <div className="bg-gray-200 p-20 rounded-lg shadow-lg max-w-lg w-full mt-16 sm:p-6">
         <h2 className="text-3xl font-bold mb-5 text-center sm:text-xl">Gerador da Quina</h2>
         <label className="block text-center mb-5">

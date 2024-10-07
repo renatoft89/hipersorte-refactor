@@ -8,7 +8,7 @@ const Navbar = (() => {
   const router = useRouter();
   const currentPath = router.asPath;
   return (
-    <nav className="container-md min-h-32 bg-sky-700 flex items-center justify-between ">
+    <nav className="container-md min-h-32 bg-sky-600 flex items-center justify-between ">
       <div className="flex px-8">
         <Link href="/" className={`text-slate-200 pl-4 font-bold ${currentPath === '/' ? 'disabled-link' : 'active-link'}`}>
           Home

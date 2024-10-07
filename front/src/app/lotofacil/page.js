@@ -21,8 +21,8 @@ const Lotofacil = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-gray-200 p-20 rounded-lg shadow-lg max-w-lg w-full mt-16 sm:p-6">
+    <div className="flex items-center justify-center">
+      <div className="bg-gray-200 p-20 rounded-lg shadow-lg max-w-lg w-full mt-10 mb-10 sm:p-6">
         <h2 className="text-3xl font-bold mb-5 text-center sm:text-xl">Gerador da Lotofácil</h2>
         <label className="block text-center mb-5">
           <span className="text-gray-700 text-lg mb-1 block sm:text-sm">Selecione quantos números deseja gerar:</span>
