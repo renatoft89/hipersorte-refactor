@@ -24,7 +24,7 @@ const Navbar = (() => {
         </Link>
       </div>
       <div className="p-8 mr-6">
-        <p className="text-slate-50 font-mono">Renato Alves</p>
+        <Link href="#" className="text-slate-50 font-mono">User</Link>
       </div>
     </nav>
   );
