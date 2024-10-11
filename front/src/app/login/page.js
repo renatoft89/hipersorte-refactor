@@ -45,7 +45,7 @@ const Login = () => {
 
   return (
     <form className="flex justify-center items-center mt-5 p-5">
-      <fieldset className="flex flex-col items-center bg-[#0056b312] border border-[#93a1ef] rounded-md shadow-lg max-w-96 px-16 py-16">
+      <fieldset className="flex flex-col items-center bg-[#0056b312] border-[#93a1ef] rounded-md shadow-lg max-w-96 px-16 py-16">
         <h1 className="font-bradley text-2xl text-center mb-2 text-blue-800">Hipersorte</h1>
         <label htmlFor='email' className="flex flex-col w-full">
           <Image
@@ -56,14 +56,14 @@ const Login = () => {
           <span className="text-left mb-1">Email:</span>
           <input
             type="email"
-            className="border border-black rounded-md mb-3 p-2 w-full max-w-[400px] focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="border-black rounded-md mb-3 p-2 w-full max-w-[400px] focus:outline-none focus:ring-2 focus:ring-blue-300"
             value={email}
             name="email"
             onChange={handleChange}
           />
           <span className="text-left mb-1">Senha:</span>
           <input
-            className='border border-black rounded-md mb-4 p-2 w-full max-w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-300'
+            className='border-black rounded-md mb-4 p-2 w-full max-w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-300'
             type="password"
             value={password}
             name='password'
@@ -75,7 +75,7 @@ const Login = () => {
             type="submit"
             onClick={handleLogin}
             disabled={validateInput()}
-            className={`bg-blue-600 text-white rounded-md h-10 w-full cursor-pointer ${validateInput() ? 'opacity-50' : ''}`}
+            className={`bg-blue600-600 text-white rounded-md h-10 w-full cursor-pointer ${validateInput() ? 'opacity-90' : 'opacity-10'}`}
           >
             Entrar
           </button>

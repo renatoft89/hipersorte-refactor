@@ -49,7 +49,7 @@ const MegaSena = () => {
               {numerosGerados.map((numero, index) => (
                 <li
                   key={index}
-                  className="flex items-center justify-center bg-green-600 text-white rounded-full h-20 w-20 text-3xl m-2 shadow-lg transition-transform transform hover:scale-110 hover:shadow-xl duration-300"
+                  className="flex items-center justify-center bg-green-600 text-white font-extrabold rounded-full h-20 w-20 text-3xl m-2 shadow-lg transition-transform transform hover:scale-110 hover:shadow-xl duration-300"
                 >
                   {numero}
                 </li>
