@@ -131,7 +131,7 @@ const Lotofacil = () => {
               className="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-500 transition duration-300 mt-5"
               onClick={saveToLocal}
             >
-              Salvar Números
+              Salvar Jogo
             </button>
           )
         }
