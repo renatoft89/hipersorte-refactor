@@ -74,22 +74,26 @@ const Lotofacil = () => {
   const saveToLocal = () => {
     const dadosExistentes = JSON.parse(localStorage.getItem('resultadosLotofacil')) || [];
     
+    // Ordena os números gerados em ordem crescente
+    const numerosGeradosOrdenados = [...numerosGerados].sort((a, b) => a - b);
+  
     // Verifica se o jogo já está salvo
     const jogoExistente = dadosExistentes.find(jogo => 
-      jogo.slice(1).sort().toString() === numerosGerados.sort().toString()
+      jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString()
     );
-
+  
     if (jogoExistente) {
       alert("O jogo já está salvo, crie um novo jogo");
       return;
     }
-
+  
     // Adiciona o concurso e os números gerados ao array
-    dadosExistentes.push([concursoLoto, ...numerosGerados]);
-
+    dadosExistentes.push([concursoLoto, ...numerosGeradosOrdenados]);
+  
     localStorage.setItem('resultadosLotofacil', JSON.stringify(dadosExistentes));
     // alert('Números salvos com sucesso!');
   };
+  
 
   return (
     <div className="flex items-center justify-center">

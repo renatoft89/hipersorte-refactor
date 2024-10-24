@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const api = axios.create({
   baseURL: `http://localhost:${process.env.REACT_APP_API_PORT || '3001'}`,
-  apiEndPoint: `https://apiloterias.com.br/app/resultado?loteria=lotofacil&token=kJdfLjd38Jai2ek`
+  apiEndPoint: `https://apiloterias.com.br/app/v2/resultado?loteria=lotofacil&token=kJdfLjd38Jai2ek&concurso=ultimos1`
 });
 
 export const regRegisterUser = async (endpoint, body) => {
@@ -20,8 +20,14 @@ export const authUser = async (endpoint, body) => {
 export const getResultsLoto = async (apiEndPoint) => {
   try {
     const response = await axios.get(apiEndPoint);
-    console.log('Response data:', response.data); // Adicione esta linha para depuração
-    return response.data;
+    // const numeroConcurso = response.data.numero_concurso; // Supondo que a API retorna o número do concurso
+    const numeroConcurso = 2236
+    const dezenas = response.data.dezenas.map(num => parseInt(num, 10)); // Converte as dezenas para inteiros
+
+    // Combina o número do concurso e as dezenas em um único array
+    const arrayReturn = [[numeroConcurso, ...dezenas]];
+    
+    return arrayReturn;
   } catch (error) {
     console.error('Error fetching results:', error);
     return [];
