@@ -1,18 +1,23 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react';
-
-import { useRouter, usePathname } from 'next/navigation'
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
-const Navbar = (() => {
+const Navbar = () => {
   const router = useRouter();
   const currentPath = usePathname();
-  const token = localStorage.getItem('USER');
+  const [userName, setUserName] = useState('null');
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
-  const userName = token ? JSON.parse(localStorage.getItem('USER'))?.name : 'null';
-  console.log(currentPath);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('USER');
+      if (token) {
+        setUserName(JSON.parse(token)?.name);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('USER');
@@ -25,10 +30,10 @@ const Navbar = (() => {
         <Link href="/" className={`text-slate-200 pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`}>
           Home
         </Link>
-        <Link href="/mega" className={`text-slate-200  pl-4 font-mono ${currentPath === '/mega' ? 'hidden' : 'default-link'}`}>
+        <Link href="/mega" className={`text-slate-200 pl-4 font-mono ${currentPath === '/mega' ? 'hidden' : 'default-link'}`}>
           Mega-Sena
         </Link>
-        <Link href="/lotofacil" className={`text-slate-200  pl-4 font-mono ${currentPath === '/lotofacil' ? 'hidden' : 'default-link'}`}>
+        <Link href="/lotofacil" className={`text-slate-200 pl-4 font-mono ${currentPath === '/lotofacil' ? 'hidden' : 'default-link'}`}>
           Lotofácil
         </Link>
         <Link href="/quina" className={`text-slate-200 pl-4 font-mono ${currentPath === '/quina' ? 'hidden' : 'default-link'}`}>
@@ -36,31 +41,29 @@ const Navbar = (() => {
         </Link>
       </div>
       <div className="p-8 mr-6">
-        { /* <Link href="#" className="text-slate-50 font-mono">{currentPath}</Link> */}
-        { /*<Link href="#" className={`text-slate-50 font-mono ${currentPath === '/login' ?  `hover:bg-sky-900`  : `active:bg-sky-700`}`}>Renato Alves</Link></nav> */}
-
-        {token ? (
-            <div className='user-menu'>
-              <button
-                className='text-slate-50 font-mono'
-                onClick={() => setDropdownOpen(!isDropdownOpen)}
-              >
-                <i className="fas fa-user"></i> {/* Ícone de usuário */}
-                {`Olá, ${userName}`}
-              </button>
-              {isDropdownOpen && (
-                <div className='text-slate-50 font-mono'>
-                  <button onClick={handleLogout} className='dropdown-item'>Logout</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link href="/login" className={`text-slate-50 font-mono ${currentPath === '/login' ?  `hover:bg-sky-900`  : `active:bg-sky-700`}`}>Login</Link>
-          )}
+        {userName !== 'null' ? (
+          <div className='user-menu'>
+            <button
+              className='text-slate-50 font-mono'
+              onClick={() => setDropdownOpen(!isDropdownOpen)}
+            >
+              <i className="fas fa-user"></i> {/* Ícone de usuário */}
+              {`Olá, ${userName}`}
+            </button>
+            {isDropdownOpen && (
+              <div className='text-slate-50 font-mono'>
+                <button onClick={handleLogout} className='dropdown-item'>Logout</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Link href="/login" className={`text-slate-50 font-mono ${currentPath === '/login' ? 'hover:bg-sky-900' : 'active:bg-sky-700'}`}>
+            Login
+          </Link>
+        )}
       </div>
     </nav>
   );
-});
-
+};
 
 export default Navbar;
