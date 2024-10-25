@@ -1,6 +1,6 @@
 
 
-const PrivateRoute = ({ component: Component, ...rest }) => {
+/*const PrivateRoute = ({ component: Component, ...rest }) => {
   const token = localStorage.getItem('USER');
   
   return (
@@ -17,4 +17,4 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
   );
 };
 
-export default PrivateRoute;
+export default PrivateRoute;*/
