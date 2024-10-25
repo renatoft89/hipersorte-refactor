@@ -2,7 +2,7 @@
   "name": "front",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://renatoft89.github.io/hipersorte-refactor",
+  "homepage": "https://renatoft89.github.io/hipersorte-refactor/",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
