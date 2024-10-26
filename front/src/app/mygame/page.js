@@ -48,7 +48,7 @@ const MyGame = () => {
                 {item.jogo.slice(1).map((numero, i) => (
                   <li 
                     key={i} 
-                    className={`flex items-center justify-center rounded-full h-12 w-12 text-xl m-1 shadow-lg 
+                    className={`flex items-center justify-center font-extrabold rounded-full h-20 w-20 text-3xl m-2 shadow-lg transition-transform transform hover:scale-110 hover:shadow-xl duration-300
                       ${item.acertos.includes(numero) ? 'bg-green-500 text-white border-2 border-green-600' : 'bg-purple-600 text-white'}`}>
                     {numero}
                   </li>
