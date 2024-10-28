@@ -15,7 +15,6 @@ const MyGame = () => {
     };
 
     fetchResults();
-
     const dadosSalvos = JSON.parse(localStorage.getItem('resultadosLotofacil')) || [];
     setJogosSalvos(dadosSalvos);
   }, []);
@@ -23,13 +22,12 @@ const MyGame = () => {
   useEffect(() => {
     if (jogosSalvos.length > 0 && resultApi.length > 0) {
       const novosAcertos = jogosSalvos.map(jogo => {
-        // Verifica se o número do concurso é igual
         if (jogo[0] === resultApi[0][0]) {
-          const resultNumeros = resultApi[0].slice(1).map(num => parseInt(num, 10)); // Dezenas da API
+          const resultNumeros = resultApi[0].slice(1).map(num => parseInt(num, 10));
           const acertos = jogo.slice(1).filter(numero => resultNumeros.includes(numero));
-          return { jogo, acertos }; // Armazena o jogo e seus acertos
+          return { jogo, acertos };
         } else {
-          return { jogo, acertos: [] }; // Se o concurso for diferente, não há acertos
+          return { jogo, acertos: [] };
         }
       });
       setAcertosPorJogo(novosAcertos);
@@ -38,8 +36,9 @@ const MyGame = () => {
 
   return (
     <div className="flex items-center justify-center">
-      <div className="bg-gray-200 p-20 rounded-lg shadow-lg max-w-lg w-full mt-10 mb-10 sm:p-6">
+      <div className="bg-gray-200 p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-full md:max-w-full lg:max-w-screen-xl mt-10 mb-10">
         <h2 className="text-3xl font-bold mb-5 text-center sm:text-xl">Jogos Salvos da Lotofácil</h2>
+<<<<<<< HEAD
         <ul className="mt-5">
           {acertosPorJogo.map((item, index) => (
             <li key={index} className="mb-4">
@@ -58,6 +57,30 @@ const MyGame = () => {
             </li>
           ))}
         </ul>
+=======
+        {acertosPorJogo.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+            {acertosPorJogo.map((item, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold">Concurso: {item.jogo[0]}</h3>
+                <ul className="mt-2 grid grid-cols-5 gap-2 justify-items-center">
+                  {item.jogo.slice(1).map((numero, i) => (
+                    <li 
+                      key={i} 
+                      className={`flex items-center justify-center rounded-full h-12 w-12 text-xl m-1 shadow-lg 
+                        ${item.acertos.includes(numero) ? 'bg-green-500 text-white border-2 border-green-600' : 'bg-purple-600 text-white'}`}>
+                      {numero}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-center font-semibold">Acertos: {item.acertos.length}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-700">Nenhum jogo salvo encontrado.</p>
+        )}
+>>>>>>> 17dc24f (feat: result lotofacil)
       </div>
     </div>
   );

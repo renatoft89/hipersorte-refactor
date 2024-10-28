@@ -27,20 +27,28 @@ const Navbar = () => {
   return (
     <nav className="container-md min-h-32 bg-sky-600 flex items-center justify-between ">
       <div className="flex px-8">
-        <Link href="/" className={`text-slate-200 pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`}>
+        <Link href="/" className={`text-slate-200 text-lg pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`}>
           Home
         </Link>
+<<<<<<< HEAD
         <Link href="/mega" className={`text-slate-200 pl-4 font-mono ${currentPath === '/mega' ? 'hidden' : 'default-link'}`}>
           Mega-Sena
         </Link>
         <Link href="/lotofacil" className={`text-slate-200 pl-4 font-mono ${currentPath === '/lotofacil' ? 'hidden' : 'default-link'}`}>
+=======
+        <Link href="/mega" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/mega' ? 'hidden' : 'default-link'}`}>
+          Mega-Sena
+        </Link>
+        <Link href="/lotofacil" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/lotofacil' ? 'hidden' : 'default-link'}`}>
+>>>>>>> 17dc24f (feat: result lotofacil)
           Lotofácil
         </Link>
-        <Link href="/quina" className={`text-slate-200 pl-4 font-mono ${currentPath === '/quina' ? 'hidden' : 'default-link'}`}>
+        <Link href="/quina" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/quina' ? 'hidden' : 'default-link'}`}>
           Quina
         </Link>
       </div>
       <div className="p-8 mr-6">
+<<<<<<< HEAD
         {userName !== 'null' ? (
           <div className='user-menu'>
             <button
@@ -61,6 +69,29 @@ const Navbar = () => {
             Login
           </Link>
         )}
+=======
+        { /* <Link href="#" className="text-slate-50 font-mono">{currentPath}</Link> */}
+        { /*<Link href="#" className={`text-slate-50 font-mono ${currentPath === '/login' ?  `hover:bg-sky-900`  : `active:bg-sky-700`}`}>Renato Alves</Link></nav> */}
+
+        {token ? (
+            <div className='user-menu'>
+              <button
+                className='text-slate-50 font-mono'
+                onClick={() => setDropdownOpen(!isDropdownOpen)}
+              >
+                <i className="fas fa-user"></i> {/* Ícone de usuário */}
+                {`Olá, ${userName}`}
+              </button>
+              {isDropdownOpen && (
+                <div className='text-slate-50 font-mono'>
+                  <button onClick={handleLogout} className='dropdown-item'>Logout</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/login" className={`text-slate-50 text-lg font-mono ${currentPath === '/login' ?  `hover:bg-sky-900`  : `active:bg-sky-700`}`}>Login</Link>
+          )}
+>>>>>>> 17dc24f (feat: result lotofacil)
       </div>
     </nav>
   );
