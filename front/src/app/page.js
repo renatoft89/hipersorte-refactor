@@ -1,15 +1,7 @@
-import Navbar from "@/components/Navbar";
-import Lotofacil from './lotofacil/page.js';
-import Mega from './mega/page.js';
-import Quina from './quina/page.js'
 import MyGame from './mygame/page.js'
 
 export default function Home() {
   return (
-    <>
-      <h2 className="font-semibold text-center pt-10">Bem-vindo ao Hipersorte!</h2>
-      <MyGame />
-    </>
-
+   <MyGame />
   );
 }

@@ -5,10 +5,11 @@ import React, { useState } from 'react';
 const Lotofacil = () => {
   const [quantidadeNumeros, setQuantidadeNumeros] = useState(15);
   const [numerosGerados, setNumerosGerados] = useState([]);
-  const concursoLoto = 2236; // Identificador do concurso
+  const [mensagemSalvo, setMensagemSalvo] = useState(""); // Estado para mensagem de sucesso
+  const concursoLoto = 3231; // Identificador do concurso
+  const [buttonSave, setButtonSave] = useState(true);
 
-  const [buttonSave, setButtonSave] = useState(true)
-
+  // Frequência dos números (exemplo)
   const frequenciaNumeros = [
     { numero: 1, frequencia: 30 },
     { numero: 2, frequencia: 25 },
@@ -38,62 +39,77 @@ const Lotofacil = () => {
   ];
 
   const gerarNumeros = () => {
-    const numeros = [];
+    const numeros = new Set(); // Usar Set para evitar duplicatas
     const totalFrequencia = frequenciaNumeros.reduce((total, num) => total + num.frequencia, 0);
 
-    while (numeros.length < quantidadeNumeros) {
+    // Gerar números com base na frequência
+    while (numeros.size < quantidadeNumeros) {
       const rand = Math.random() * totalFrequencia;
       let somaFrequencia = 0;
-      for (let i = 0; i < frequenciaNumeros.length; i++) {
-        somaFrequencia += frequenciaNumeros[i].frequencia;
-        if (rand <= somaFrequencia && !numeros.includes(frequenciaNumeros[i].numero)) {
-          numeros.push(frequenciaNumeros[i].numero);
+
+      for (let { numero, frequencia } of frequenciaNumeros) {
+        somaFrequencia += frequencia;
+        if (rand <= somaFrequencia) {
+          numeros.add(numero); // Adiciona ao Set
           break;
         }
       }
     }
 
-    if (numeros.length === quantidadeNumeros) {
-      const numerosBaixos = numeros.filter(num => num <= 12);
-      const numerosAltos = numeros.filter(num => num > 12);
-      if (numerosBaixos.length < 5) {
-        const complemento = [...Array(5 - numerosBaixos.length)].map(() => Math.floor(Math.random() * 12) + 1);
-        numeros.push(...complemento.filter(num => !numeros.includes(num)));
-      }
-      if (numerosAltos.length < 5) {
-        const complemento = [...Array(5 - numerosAltos.length)].map(() => Math.floor(Math.random() * 13) + 13);
-        numeros.push(...complemento.filter(num => !numeros.includes(num)));
-      }
+    // Converter Set de volta para Array
+    const numerosArray = Array.from(numeros);
+    numerosArray.sort((a, b) => a - b);
+
+    // Garantir a distribuição de números baixos e altos
+    const numerosBaixos = numerosArray.filter(num => num <= 12);
+    const numerosAltos = numerosArray.filter(num => num > 12);
+
+    if (numerosBaixos.length < 5) {
+      const complemento = [...Array(5 - numerosBaixos.length)].map(() => {
+        let num;
+        do {
+          num = Math.floor(Math.random() * 12) + 1;
+        } while (numerosArray.includes(num)); // Evitar duplicatas
+        return num;
+      });
+      numerosArray.push(...complemento);
     }
 
-    numeros.sort((a, b) => a - b);
-    setNumerosGerados(numeros);
-    setButtonSave(false)
+    if (numerosAltos.length < 5) {
+      const complemento = [...Array(5 - numerosAltos.length)].map(() => {
+        let num;
+        do {
+          num = Math.floor(Math.random() * 13) + 13;
+        } while (numerosArray.includes(num)); // Evitar duplicatas
+        return num;
+      });
+      numerosArray.push(...complemento);
+    }
+
+    setNumerosGerados(numerosArray);
+    setButtonSave(false);
+    setMensagemSalvo(""); // Limpa a mensagem ao gerar novos números
   };
 
   const saveToLocal = () => {
     const dadosExistentes = JSON.parse(localStorage.getItem('resultadosLotofacil')) || [];
-    
-    // Ordena os números gerados em ordem crescente
     const numerosGeradosOrdenados = [...numerosGerados].sort((a, b) => a - b);
-  
-    // Verifica se o jogo já está salvo
     const jogoExistente = dadosExistentes.find(jogo => 
       jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString()
     );
-  
+
     if (jogoExistente) {
       alert("O jogo já está salvo, crie um novo jogo");
       return;
     }
-  
-    // Adiciona o concurso e os números gerados ao array
+
     dadosExistentes.push([concursoLoto, ...numerosGeradosOrdenados]);
-  
     localStorage.setItem('resultadosLotofacil', JSON.stringify(dadosExistentes));
-    // alert('Números salvos com sucesso!');
+
+    // Mensagem de sucesso
+    setMensagemSalvo("Jogo salvo com sucesso!");
+    setTimeout(() => setMensagemSalvo(""), 3000); // Remove a mensagem após 3 segundos
   };
-  
 
   return (
     <div className="flex items-center justify-center">
@@ -129,16 +145,19 @@ const Lotofacil = () => {
             ))}
           </ul>
         </div>
-        {
-          buttonSave ? null : (
+        {buttonSave ? null : (
+          <div>
             <button
               className="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-500 transition duration-300 mt-5"
               onClick={saveToLocal}
             >
               Salvar Jogo
             </button>
-          )
-        }
+            {mensagemSalvo && (
+              <p className="mt-2 text-green-600 font-semibold text-center">{mensagemSalvo}</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

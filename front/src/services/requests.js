@@ -17,7 +17,7 @@ export const authUser = async (endpoint, body) => {
   return data;
 };
 
-export const getResultsLoto = async (apiEndPoint) => {
+/*export const getResultsLoto = async (apiEndPoint) => {
   try {
     const response = await axios.get(apiEndPoint);
     // const numeroConcurso = response.data.numero_concurso; // Supondo que a API retorna o número do concurso
@@ -32,5 +32,13 @@ export const getResultsLoto = async (apiEndPoint) => {
     console.error('Error fetching results:', error);
     return [];
   }
+};*/
+
+export const getResultsLoto = async () => {
+  // Dados simulados do concurso 3231 da Lotofácil com 15 números
+  return [[3231, 1, 2, 3, 4, 5, 6, 9, 16, 18, 19, 20, 22, 23, 24, 25]]; // Exemplo de dezenas da Lotofácil
 };
+
+
+
 export default api;
