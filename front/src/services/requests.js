@@ -39,6 +39,16 @@ export const getResultsLoto = async () => {
   return [[3231, 1, 2, 3, 4, 5, 6, 9, 16, 18, 19, 20, 22, 23, 24, 25]]; // Exemplo de dezenas da Lotofácil
 };
 
+export const getResultsMega = async () => {
+  // Dados simulados do concurso 3231 da Megasena com 15 números
+  return [[2791, 2, 3, 11,25, 37, 43]]; // Exemplo de dezenas da Megasena
+};
+
+export const getResultsQuina = async () => {
+  // Dados simulados do concurso 3231 da Megasena com 15 números
+  return [[6570, 28, 37, 53 ,64, 70]]; // Exemplo de dezenas da Megasena
+};
+
 
 
 export default api;
