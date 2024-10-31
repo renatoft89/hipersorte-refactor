@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer"
 import "./globals.css";
-import { Montserrat} from 'next/font/google'
+import { Montserrat } from 'next/font/google'
 
 
 const font = Montserrat({
@@ -16,6 +16,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
+      <link
+        rel="icon"
+        href="/trevo.png?<generated>"
+        type="image/<generated>"
+        sizes="<generated>"
+      />
       <body className={`${font.className} flex flex-col min-h-screen`}>
         <Navbar />
         <main className="flex-grow">{children}</main>
