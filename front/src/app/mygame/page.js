@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { getResultsLoto, getResultsMega } from '@/services/requests'; // Importando as funções corretas
+import { getResultsLoto, getResultsMega, getResultsQuina } from '@/services/requests'; // Importando a função para Quina
 
 const MyGame = () => {
   const [jogosSalvos, setJogosSalvos] = useState([]);
@@ -14,7 +14,7 @@ const MyGame = () => {
   const loterias = [
     { nome: 'Mega Sena', valor: 'MegaSena' },
     { nome: 'Lotofácil', valor: 'lotofacil' },
-    { nome: 'Quina', valor: 'quina' } // Supondo que você tenha uma função para Quina
+    { nome: 'Quina', valor: 'quina' }
   ];
 
   useEffect(() => {
@@ -24,6 +24,8 @@ const MyGame = () => {
         data = await getResultsLoto();
       } else if (loteriaSelecionada === 'MegaSena') {
         data = await getResultsMega();
+      } else if (loteriaSelecionada === 'quina') { // Adicionando verificação para Quina
+        data = await getResultsQuina();
       }
 
       setResultApi(data);
