@@ -1,20 +1,16 @@
+import { useEffect, useState } from 'react';
 
+const useAuth = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-/*const PrivateRoute = ({ component: Component, ...rest }) => {
-  const token = localStorage.getItem('USER');
-  
-  return (
-    <Route
-      {...rest}
-      render={props =>
-        token ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to="/login" />
-        )
-      }
-    />
-  );
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  return isAuthenticated;
 };
 
-export default PrivateRoute;*/
+export default useAuth;

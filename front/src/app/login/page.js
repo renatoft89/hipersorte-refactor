@@ -1,14 +1,23 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { addUserLocal } from '../../services/localStorage';
 import { authUser } from '../../services/requests';
 import Image from 'next/image';
 import Sorte from '../../img/sorte.png';
+import useAuth from '@/components/PrivateRoute';
 
 const Login = () => {
   const router = useRouter();
+  const isAuthenticated = useAuth(); // Verifica se o usuário já está autenticado
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/'); // Redireciona para a página inicial se o usuário estiver logado
+    }
+  }, [isAuthenticated, router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState(false);
@@ -26,10 +35,11 @@ const Login = () => {
   const handleLogin = async (event) => {
     event.preventDefault();
     const dataLogin = { email, password };
+  
     try {
       const { user } = await authUser('/login/auth', dataLogin);
       addUserLocal({ name: user.name, email: user.email, token: user.token, role: user.role });
-      history.push("/");
+      router.push("/"); // Redireciona para a página inicial após o login
     } catch (error) {
       setErr(error.response?.data?.message || error.message);
     }
@@ -40,7 +50,8 @@ const Login = () => {
     const REGEX = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/gm;
     const passwordTest = password.length < MIN_PASSWORD;
     const emailTest = !(REGEX.test(email));
-    return !(emailTest || passwordTest);
+   
+    return emailTest || passwordTest;
   }
 
   return (
@@ -75,7 +86,11 @@ const Login = () => {
             type="submit"
             onClick={handleLogin}
             disabled={validateInput()}
-            className={`bg-blue600-600 text-white rounded-md h-10 w-full cursor-pointer ${validateInput() ? 'opacity-90' : 'opacity-10'}`}
+            className={`${
+              validateInput() ? 
+                'bg-blue-200 text-blue-600 opacity-50 cursor-not-allowed' : 
+                'bg-blue-600 text-white opacity-100 hover:bg-blue-700'
+            } rounded-md h-10 w-full transition-all duration-300 ease-in-out`}
           >
             Entrar
           </button>
