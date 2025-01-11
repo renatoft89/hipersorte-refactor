@@ -29,7 +29,7 @@ const Navbar = () => {
   return (
     <nav className="container-md min-h-32 bg-sky-600 flex items-center justify-between">
       {/* Menu para dispositivos desktop */}
-      <div className="flex px-8 hidden md:flex">
+      <div className="px-8 hidden md:flex">
         <Link href="/" className={`text-slate-200 text-lg pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`}>
           Home
         </Link>

@@ -9,7 +9,7 @@ const font = Montserrat({
 })
 
 export const metadata = {
-  title: "Hipersorte",
+  title: "Hypersorte",
   description: "Crie o seu Jogo",
 };
 

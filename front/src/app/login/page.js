@@ -57,7 +57,7 @@ const Login = () => {
   return (
     <form className="flex justify-center items-center mt-5 p-3">
       <fieldset className="flex flex-col items-center bg-[#0056b312] border-[#93a1ef] rounded-md shadow-lg max-w-96 px-20 py-12">
-        <h1 className="font-bradley text-2xl text-center mb-2 text-blue-800">Hipersorte</h1>
+        <h1 className="font-bradley text-2xl text-center mb-2 text-blue-800">Hypersorte</h1>
         <div className="flex flex-col items-center w-full">
           <Image
             src={Sorte}
