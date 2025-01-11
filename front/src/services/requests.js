@@ -41,7 +41,7 @@ export const getResultsLoto = async () => {
 
 export const getResultsMega = async () => {
   // Dados simulados do concurso 3231 da Megasena com 15 números
-  return [[2791, 2, 3, 11,25, 37, 43]]; // Exemplo de dezenas da Megasena
+  return [[2791, 2, 3, 11, 25, 37, 43]]; // Exemplo de dezenas da Megasena
 };
 
 export const getResultsQuina = async () => {

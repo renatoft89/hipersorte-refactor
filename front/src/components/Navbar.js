@@ -9,6 +9,7 @@ const Navbar = () => {
   const currentPath = usePathname();
   const [userName, setUserName] = useState(null);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -27,7 +28,8 @@ const Navbar = () => {
 
   return (
     <nav className="container-md min-h-32 bg-sky-600 flex items-center justify-between">
-      <div className="flex px-8">
+      {/* Menu para dispositivos desktop */}
+      <div className="flex px-8 hidden md:flex">
         <Link href="/" className={`text-slate-200 text-lg pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`}>
           Home
         </Link>
@@ -41,6 +43,39 @@ const Navbar = () => {
           Quina
         </Link>
       </div>
+
+      {/* Botão de Menu Hamburguer (apenas visível em dispositivos móveis) */}
+      <div className="md:hidden flex items-center px-4">
+        <button
+          className="text-slate-200"
+          onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {/* Icone de Menu Hambúrguer usando Tailwind CSS */}
+          <div className="space-y-2">
+            <div className="w-6 h-1 bg-slate-200"></div>
+            <div className="w-6 h-1 bg-slate-200"></div>
+            <div className="w-6 h-1 bg-slate-200"></div>
+          </div>
+        </button>
+      </div>
+
+      {/* Menu para dispositivos móveis */}
+      <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'} absolute top-0 left-0 w-full bg-sky-600 p-8`}>
+        <Link href="/" className={`text-slate-200 text-lg pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+          Home
+        </Link>
+        <Link href="/mega" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/mega' ? 'hidden' : 'default-link'}`} onClick={() => setMobileMenuOpen(false)}>
+          Mega-Sena
+        </Link>
+        <Link href="/lotofacil" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/lotofacil' ? 'hidden' : 'default-link'}`} onClick={() => setMobileMenuOpen(false)}>
+          Lotofácil
+        </Link>
+        <Link href="/quina" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/quina' ? 'hidden' : 'default-link'}`} onClick={() => setMobileMenuOpen(false)}>
+          Quina
+        </Link>
+      </div>
+
+      {/* Menu de Usuário */}
       <div className="p-8 mr-6">
         {userName ? (
           <div className='user-menu'>

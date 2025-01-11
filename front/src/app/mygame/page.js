@@ -34,21 +34,29 @@ const MyGame = () => {
 
     fetchResults();
     const dadosSalvos = JSON.parse(localStorage.getItem(`resultados${loteriaSelecionada.charAt(0).toUpperCase() + loteriaSelecionada.slice(1)}`)) || [];
-    setJogosSalvos(dadosSalvos);
+    
+    // Padroniza os números dos jogos salvos para inteiros
+    const jogosSalvosComNumerosInteiros = dadosSalvos.map(jogo => [jogo[0], ...jogo.slice(1).map(num => parseInt(num, 10))]);
+    setJogosSalvos(jogosSalvosComNumerosInteiros);
   }, [loteriaSelecionada]);
 
   useEffect(() => {
     if (jogosSalvos.length > 0 && resultApi.length > 0 && concursoSelecionado) {
       const resultadoAtual = resultApi.find(concurso => concurso[0] === parseInt(concursoSelecionado));
       if (resultadoAtual) {
+        // Converte os números sorteados para inteiros
         const resultNumeros = resultadoAtual.slice(1).map(num => parseInt(num, 10));
+
         const novosAcertos = jogosSalvos.map(jogo => {
           if (jogo[0] === resultadoAtual[0]) {
-            const acertos = jogo.slice(1).filter(numero => resultNumeros.includes(numero));
+            // Converte os números dos jogos salvos para inteiros e compara com os números sorteados
+            const acertos = jogo.slice(1).map(num => parseInt(num, 10)).filter(numero => resultNumeros.includes(numero));
+
             return { jogo, acertos };
           }
           return { jogo, acertos: [] };
         });
+
         setAcertosPorJogo(novosAcertos);
       }
     }
