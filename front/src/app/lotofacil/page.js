@@ -11,23 +11,28 @@ const Lotofacil = () => {
   const [buttonSave, setButtonSave] = useState(true);
   const [modoEscolha, setModoEscolha] = useState(false);
   const [quantidadeNumeros, setQuantidadeNumeros] = useState(15);
+  const [isLoading, setIsLoading] = useState(false); // Estado para controle de loading
 
   const gerarNumeros = () => {
-    const numeros = new Set();
-
-    while (numeros.size < quantidadeNumeros) {
-      const numeroAleatorio = Math.floor(Math.random() * 25) + 1;
-      numeros.add(numeroAleatorio);
-    }
-
-    const numerosArray = Array.from(numeros);
-    numerosArray.sort((a, b) => a - b);
-
-    setNumerosGerados(numerosArray);
-    setButtonSave(false);
+    setIsLoading(true); // Ativa o loading
+    setMensagemErro("");
     setNumerosEscolhidos([]);
     setMensagemSalvo("");
-    setMensagemErro("");
+
+    setTimeout(() => {
+      const numeros = new Set();
+      while (numeros.size < quantidadeNumeros) {
+        const numeroAleatorio = Math.floor(Math.random() * 25) + 1;
+        numeros.add(numeroAleatorio);
+      }
+
+      const numerosArray = Array.from(numeros);
+      numerosArray.sort((a, b) => a - b);
+
+      setNumerosGerados(numerosArray);
+      setButtonSave(false);
+      setIsLoading(false); // Desativa o loading após o tempo
+    }, 300); // Atraso de 0,3 segundos para simular o loading
   };
 
   const selecionarNumero = (numero) => {
@@ -65,7 +70,7 @@ const Lotofacil = () => {
     localStorage.setItem('resultadosLotofacil', JSON.stringify(dadosExistentes));
 
     setMensagemSalvo("Jogo salvo com sucesso!");
-    setTimeout(() => setMensagemSalvo(""), 3000);
+    setTimeout(() => setMensagemSalvo(""), 8000);
   };
 
   return (
@@ -124,8 +129,9 @@ const Lotofacil = () => {
             <button
               className="w-full bg-purple-600 text-white font-bold py-2 rounded hover:bg-purple-500 transition duration-300 text-lg sm:py-1 sm:text-base"
               onClick={gerarNumeros}
+              disabled={isLoading} // Desabilita o botão enquanto está carregando
             >
-              Gerar Números
+              {isLoading ? "Carregando..." : "Gerar Números"}
             </button>
 
             <div className="mt-5">
