@@ -1,0 +1,113 @@
+-- MySQL dump 10.13  Distrib 8.0.36, for Linux (x86_64)
+--
+-- Host: 127.0.0.1    Database: loto_results
+-- ------------------------------------------------------
+-- Server version	8.3.0
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `Bet`
+--
+
+DROP TABLE IF EXISTS `Bet`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Bet` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `game_type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `numbers` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Bet_user_id_fkey` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Bet`
+--
+
+/*!40000 ALTER TABLE `Bet` DISABLE KEYS */;
+INSERT INTO `Bet` VALUES (3,'mega','[\"09\",\"23\",\"31\",\"49\",\"54\",\"58\"]','2024-02-28 16:35:15.840','2024-03-14 00:15:32.537',1);
+/*!40000 ALTER TABLE `Bet` ENABLE KEYS */;
+
+--
+-- Table structure for table `Users`
+--
+
+DROP TABLE IF EXISTS `Users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `role` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Users_email_key` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Users`
+--
+
+/*!40000 ALTER TABLE `Users` DISABLE KEYS */;
+INSERT INTO `Users` VALUES (17,'Renato alveso','renatoft889@gmail.com','$2a$08$.FBMNYQStfLKOVieuN4FJeiIrDBngjQvO8SEfeQwyASjri8ia5Wj2','2024-03-12 23:09:52.792','customer'),(18,'Renato alves','renatoft89@gmail.com','$2a$08$cLNZRyexxoA7FcqJ613aBenii6PcgjvHGwRHB3q47MV2luH9m9hDe','2024-03-12 23:13:04.680','customer'),(19,'aster asters','aster1234@gmail.com','$2a$08$9RDC1umrPE2D6.gzWh.dmOIAgl0k1P6lwSjFkxMbSb6jlisZxk0b.','2024-03-13 00:13:52.058','customer');
+/*!40000 ALTER TABLE `Users` ENABLE KEYS */;
+
+--
+-- Table structure for table `_prisma_migrations`
+--
+
+DROP TABLE IF EXISTS `_prisma_migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `_prisma_migrations` (
+  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `checksum` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `finished_at` datetime(3) DEFAULT NULL,
+  `migration_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `logs` text COLLATE utf8mb4_unicode_ci,
+  `rolled_back_at` datetime(3) DEFAULT NULL,
+  `started_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `applied_steps_count` int unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_prisma_migrations`
+--
+
+/*!40000 ALTER TABLE `_prisma_migrations` DISABLE KEYS */;
+INSERT INTO `_prisma_migrations` VALUES ('6ac7ef88-c660-4482-b223-9a39d1a90c57','fdc8ae31c96834ed2ff586685cb83cc79c46f50df16a2f0ddf3a8e86d1c68433','2024-02-27 00:51:24.797','20240227005124_fix',NULL,NULL,'2024-02-27 00:51:24.741',1),('86caccac-445c-4f94-8d20-f19a14e8244d','d9a7c5c796fa802046712800b654014fffb3fa689a95dd487c8e513753224f95','2024-02-26 23:08:30.400','20240226230830_init',NULL,NULL,'2024-02-26 23:08:30.267',1);
+/*!40000 ALTER TABLE `_prisma_migrations` ENABLE KEYS */;
+
+--
+-- Dumping routines for database 'loto_results'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2024-04-15 21:43:30
