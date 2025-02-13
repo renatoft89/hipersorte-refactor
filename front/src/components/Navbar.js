@@ -11,18 +11,32 @@ const Navbar = () => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
+  // Função para verificar se o usuário está logado e atualizar o estado `userName`
+  const checkUserLoggedIn = () => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('USER');
       if (token) {
-        setUserName(JSON.parse(token)?.name);
+        const user = JSON.parse(token);
+        setUserName(user?.name); // Atualiza o estado com o nome do usuário
+      } else {
+        setUserName(null); // Se não houver token, define o estado como null
       }
     }
+  };
+
+  // Verifica o estado do usuário ao carregar o componente
+  useEffect(() => {
+    checkUserLoggedIn();
   }, []);
+
+  // Verifica o estado do usuário sempre que a rota mudar
+  useEffect(() => {
+    checkUserLoggedIn();
+  }, [currentPath]);
 
   const handleLogout = () => {
     localStorage.removeItem('USER');
-    setUserName(null);
+    setUserName(null); // Limpa o estado do usuário
     router.push('/login');
   };
 
