@@ -1,4 +1,4 @@
-const { serviceResultLoteria } = require("../services/serviceLoteria");
+const { serviceResultLoteria, serviceContextLottery } = require("../services/serviceLoteria");
 
 const getResultLoteria = async (req, res, next) => {
   try {
@@ -17,4 +17,15 @@ const getResultLoteria = async (req, res, next) => {
   }
 };
 
-module.exports = { getResultLoteria };
+const getContestLottery = async (req, res, next) => {
+  try {
+    const  { typeLottery }  = req.params;
+    const result = await serviceContextLottery(typeLottery);
+    
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getResultLoteria, getContestLottery };
