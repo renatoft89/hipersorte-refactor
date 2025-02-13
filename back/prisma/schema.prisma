@@ -33,3 +33,11 @@ model Bet {
   user      Users    @relation(fields: [user_id], references: [id])
   user_id   Int
 }
+
+model Contest {
+  id               String @id @default(uuid())
+  currentContest   Int    @unique
+  game_type        String
+  
+  @@map("contests") // Nome da tabela no banco (opcional)
+}
