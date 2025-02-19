@@ -197,6 +197,32 @@ const getResultsQuina = async () => {
   }
 };
 
+const getNextContest = async (typeLottery) => {
+  try {
+    const url = `https://www.loteriasonline.caixa.gov.br/silce-web/#/${typeLottery}`;
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle2' });
+
+    // Supondo que o próximo concurso está em um seletor específico, ajuste conforme necessário
+    const nextContest = await page.evaluate(() => {
+      const element = document.querySelector('#proximoConcurso');
+      return element ? parseInt(element.innerText.trim(), 10) : null;
+    });
+
+    await browser.close();
+
+    if (!nextContest) {
+      throw new Error('Não foi possível extrair o próximo concurso');
+    }
+
+    return nextContest;
+  } catch (error) {
+    console.error('Erro ao obter próximo concurso:', error);
+    throw new Error('Erro ao buscar próximo concurso');
+  }
+};
+
 
 
 // Função principal que escolhe qual loteria chamar com base no parâmetro
@@ -218,4 +244,4 @@ const getResultsLoteria = async (lotteryType) => {
 
 
 
-module.exports = { getResultsLoteria };
+module.exports = { getResultsLoteria, getNextContest };
