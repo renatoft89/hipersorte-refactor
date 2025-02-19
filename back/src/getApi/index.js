@@ -5,8 +5,7 @@ const getResultsMega = async () => {
   let browser;
   try {
     browser = await puppeteer.launch({
-      // headless: 'true', // (default) enables Headless
-      // `headless: 'old'` enables old Headless
+      executablePath: '/usr/bin/chromium-browser',  // Caminho correto do Chromium
       headless: false
     });
 
@@ -72,7 +71,7 @@ const getResultsLotofacil = async () => {
   let browser;
   try {
     browser = await puppeteer.launch({
-      // executablePath: '/usr/bin/chromium-browser',
+      executablePath: '/usr/bin/chromium-browser',
       headless: false,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -140,7 +139,9 @@ const getResultsQuina = async () => {
   let browser;
   try {
     browser = await puppeteer.launch({
-      headless: false
+      executablePath: '/usr/bin/chromium-browser',
+      headless: false,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
     const page = await browser.newPage();

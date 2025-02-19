@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "https://renatoft89.github.io/hipersorte-refactor",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "predeploy": "next build && next export",
