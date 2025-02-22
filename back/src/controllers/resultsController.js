@@ -20,6 +20,9 @@ const getResultLoteria = async (req, res, next) => {
 const getContestLottery = async (req, res, next) => {
   try {
     const  { typeLottery }  = req.params;
+    if (!['mega', 'lotofacil', 'quina'].includes(typeLottery)) {
+      return res.status(400).json({ error: "O tipo de loteria informado é inválido. Por favor, use um dos seguintes tipos válidos: mega, lotofacil ou quina" });
+    }
     const result = await serviceContextLottery(typeLottery);
     
     return res.status(200).json(result);
