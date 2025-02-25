@@ -21,29 +21,30 @@ const serviceResultLoteria = async (typeLottery) => {
     // Converte os números para string para armazenar no banco
     const numbersString = JSON.stringify(formattedNumbers);
 
-    // Verifica se já existem registros para o tipo de loteria
-    const existingBets = await prisma.bet.findMany({
-      where: { game_type: typeLottery }
+    // Verifica se já existe um registro com o mesmo número de concurso para o tipo de loteria
+    const existingBet = await prisma.bet.findFirst({
+      where: { 
+        game_type: typeLottery, 
+        numbers: {
+          contains: resultados.concurso.toString() // Verifica se o concurso já foi registrado
+        }
+      }
     });
 
-    // Se não houver registros, insere novos dados
-    if (existingBets.length === 0) {
-      await prisma.bet.create({
-        data: {
-          game_type: typeLottery,
-          numbers: numbersString,
-          user_id: 1 // Ajuste conforme necessário
-        }
-      });
-      console.log(`Novo resultado para a loteria ${typeLottery} inserido.`);
-    } else {
-      // Se houver registros, atualiza os números
-      await prisma.bet.updateMany({
-        where: { game_type: typeLottery },
-        data: { numbers: numbersString }
-      });
-      console.log(`Resultados da loteria ${typeLottery} atualizados.`);
+    if (existingBet) {
+      console.log(`O concurso ${resultados.concurso} já foi registrado para a loteria ${typeLottery}. Nenhuma alteração feita.`);
+      return resultados; // Retorna os resultados sem fazer nada
     }
+
+    // Se não houver registros, insere um novo dado
+    await prisma.bet.create({
+      data: {
+        game_type: typeLottery,
+        numbers: numbersString,
+        user_id: 1 // Ajuste conforme necessário
+      }
+    });
+    console.log(`Novo resultado para o concurso ${resultados.concurso} da loteria ${typeLottery} inserido.`);
 
     return resultados;
 
@@ -52,6 +53,7 @@ const serviceResultLoteria = async (typeLottery) => {
     throw new Error('Erro interno do servidor');
   }
 };
+
 
 const serviceContextLottery = async (typeLottery) => {
   console.log(`Buscando o próximo concurso da ${typeLottery}...`);
