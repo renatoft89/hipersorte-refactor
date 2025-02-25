@@ -1,15 +1,40 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getNextContest } from '../../services/requests';
 
 const MegaSena = () => {
   const [numerosGerados, setNumerosGerados] = useState([]);
   const [numerosEscolhidos, setNumerosEscolhidos] = useState([]);
   const [mensagemSalvo, setMensagemSalvo] = useState("");
   const [mensagemErro, setMensagemErro] = useState("");
-  const concursoLoto = 2792; 
   const [modoEscolha, setModoEscolha] = useState(false);
   const [quantidadeNumeros, setQuantidadeNumeros] = useState(6);
+  const [nextContest, setNextContest] = useState();
+
+  // useEffect para buscar o próximo concurso ao carregar a página
+  useEffect(() => {
+    // Função assíncrona para buscar o próximo concurso
+    const fetchNextContest = async () => {
+      try {
+        // Chama a função getNextContest para fazer a requisição à API
+        // A função retorna um objeto contendo o próximo concurso
+        const { currentContest } = await getNextContest('/contest/mega');
+        // Atualiza o estado 'nextContest' com o valor de currentContest
+        // Isso faz com que a interface exiba o próximo concurso ao usuário
+        setNextContest(currentContest);
+      } catch (error) {
+        // Caso ocorra um erro durante a requisição, o erro é capturado e exibido no console
+        // Isso ajuda a depurar problemas de comunicação com a API ou outros erros
+        console.error("Erro ao buscar o próximo concurso:", error);
+      }
+    };
+
+    // Chama a função fetchNextContest para buscar o próximo concurso assim que o componente for montado
+    // Isso é feito uma única vez, já que o array de dependências do useEffect está vazio
+    fetchNextContest();
+  }, []); // O array vazio [] garante que o efeito seja executado apenas uma vez no carregamento inicial do componente
+
 
   const gerarNumeros = () => {
     const numeros = new Set();
@@ -42,7 +67,7 @@ const MegaSena = () => {
     const dadosExistentes = JSON.parse(localStorage.getItem('resultadosMegaSena')) || [];
     const numerosASeremSalvos = modoEscolha ? [...numerosEscolhidos] : [...numerosGerados];
     const numerosGeradosOrdenados = numerosASeremSalvos.sort((a, b) => a - b);
-    const jogoExistente = dadosExistentes.find(jogo => 
+    const jogoExistente = dadosExistentes.find(jogo =>
       jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString()
     );
 
@@ -51,7 +76,7 @@ const MegaSena = () => {
       return;
     }
 
-    dadosExistentes.push([concursoLoto, ...numerosGeradosOrdenados]);
+    dadosExistentes.push([nextContest, ...numerosGeradosOrdenados]);
     localStorage.setItem('resultadosMegaSena', JSON.stringify(dadosExistentes));
     setMensagemSalvo("Jogo salvo com sucesso!");
     setTimeout(() => setMensagemSalvo(""), 3000);
@@ -62,11 +87,18 @@ const MegaSena = () => {
       <div className="bg-gray-200 p-10 rounded-lg shadow-lg max-w-lg w-full mt-10 mb-10 sm:p-6">
         <h2 className="text-3xl font-bold mb-5 text-center sm:text-xl">Gerador da Mega Sena</h2>
 
+        {/* Próximo Concurso */}
+        <div className="text-center mb-5">
+          <a className="text-gray-700 text-sm sm:text-base font-semibold">
+            Próximo Concurso: <span className="text-lg font-bold text-green-600">{nextContest}</span>
+          </a>
+        </div>
+
         <label className="flex items-center mb-5 cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={modoEscolha} 
-            onChange={() => setModoEscolha(!modoEscolha)} 
+          <input
+            type="checkbox"
+            checked={modoEscolha}
+            onChange={() => setModoEscolha(!modoEscolha)}
             className="mr-2"
           />
           <span className={`text-gray-700 text-lg ${modoEscolha ? 'font-bold' : ''}`}>Escolher Números</span>
@@ -85,7 +117,7 @@ const MegaSena = () => {
                   key={numero}
                   onClick={() => selecionarNumero(numero)}
                   className={`h-20 w-20 rounded-full text-3xl font-bold m-2 transition duration-300 
-                    ${numerosEscolhidos.includes(numero) ? 'bg-green-500 text-white' : 'bg-gray-300 text-black hover:bg-gray-400'}`}
+                ${numerosEscolhidos.includes(numero) ? 'bg-green-500 text-white' : 'bg-gray-300 text-black hover:bg-gray-400'}`}
                 >
                   {numero}
                 </button>
@@ -96,7 +128,7 @@ const MegaSena = () => {
           <div>
             <label className="block text-center mb-5">
               <span className="text-gray-700 text-lg mb-1 block sm:text-sm">Selecione quantos números deseja gerar:</span>
-              <select 
+              <select
                 value={quantidadeNumeros}
                 onChange={(e) => setQuantidadeNumeros(parseInt(e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-500"
@@ -145,6 +177,7 @@ const MegaSena = () => {
         ) : null}
       </div>
     </div>
+
   );
 };
 

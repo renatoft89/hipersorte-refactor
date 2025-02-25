@@ -1,24 +1,37 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getNextContest } from '../../services/requests';
 
 const Quina = () => {
   const [numerosGerados, setNumerosGerados] = useState([]);
   const [numerosEscolhidos, setNumerosEscolhidos] = useState([]);
   const [mensagemSalvo, setMensagemSalvo] = useState("");
   const [mensagemErro, setMensagemErro] = useState("");
-  const concursoLoto = 6570; 
   const [modoEscolha, setModoEscolha] = useState(false);
   const [quantidadeNumeros, setQuantidadeNumeros] = useState(5);
+  const [nextContest, setNextContest] = useState();
+
+  // useEffect para buscar o próximo concurso ao carregar a página
+  useEffect(() => {
+    const fetchNextContest = async () => {
+      try {
+        const { currentContest } = await getNextContest('/contest/quina');
+        setNextContest(currentContest);
+      } catch (error) {
+        console.error("Erro ao buscar o próximo concurso:", error);
+      }
+    };
+
+    fetchNextContest();
+  }, []);
 
   const gerarNumeros = () => {
     const numeros = new Set();
-
-    while (numeros.size < quantidadeNumeros) { // Gera a quantidade selecionada
+    while (numeros.size < quantidadeNumeros) {
       const numeroAleatorio = Math.floor(Math.random() * 80) + 1; // 1 a 80
       numeros.add(numeroAleatorio);
     }
-
     const numerosArray = Array.from(numeros).sort((a, b) => a - b);
     setNumerosGerados(numerosArray);
     setNumerosEscolhidos([]); // Limpa os números escolhidos
@@ -35,7 +48,6 @@ const Quina = () => {
         setMensagemErro(""); // Limpa a mensagem de erro quando a quantidade mínima é atingida
       }
     }
-
     if (numerosEscolhidos.length >= 9) {
       setMensagemErro("Você já escolheu a quantidade máxima de números!");
     }
@@ -45,9 +57,7 @@ const Quina = () => {
     const dadosExistentes = JSON.parse(localStorage.getItem('resultadosQuina')) || [];
     const numerosASeremSalvos = modoEscolha ? [...numerosEscolhidos] : [...numerosGerados];
     const numerosGeradosOrdenados = numerosASeremSalvos.sort((a, b) => a - b);
-
-    // Verifica se o jogo já está salvo
-    const jogoExistente = dadosExistentes.find(jogo => 
+    const jogoExistente = dadosExistentes.find(jogo =>
       jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString()
     );
 
@@ -56,10 +66,8 @@ const Quina = () => {
       return;
     }
 
-    // Salva os números junto com o concurso
-    dadosExistentes.push([concursoLoto, ...numerosGeradosOrdenados]);
+    dadosExistentes.push([nextContest, ...numerosGeradosOrdenados]);
     localStorage.setItem('resultadosQuina', JSON.stringify(dadosExistentes));
-
     setMensagemSalvo("Jogo salvo com sucesso!");
     setTimeout(() => setMensagemSalvo(""), 3000);
   };
@@ -69,14 +77,21 @@ const Quina = () => {
       <div className="bg-gray-200 p-10 rounded-lg shadow-lg max-w-lg w-full mt-10 mb-10 sm:p-6">
         <h2 className="text-3xl font-bold mb-5 text-center sm:text-xl">Gerador da Quina</h2>
 
-        <label className="flex items-center mb-5">
-          <input 
-            type="checkbox" 
-            checked={modoEscolha} 
-            onChange={() => setModoEscolha(!modoEscolha)} 
+        {/* Próximo Concurso */}
+        <div className="text-center mb-5">
+          <a className="text-gray-700 text-sm sm:text-base font-semibold">
+            Próximo Concurso: <span className="text-lg font-bold text-blue-900">{nextContest}</span>
+          </a>
+        </div>
+
+        <label className="flex items-center mb-5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={modoEscolha}
+            onChange={() => setModoEscolha(!modoEscolha)}
             className="mr-2"
           />
-          <span className="text-gray-700 text-lg">Escolher Números</span>
+          <span className={`text-gray-700 text-lg ${modoEscolha ? 'font-bold' : ''}`}>Escolher Números</span>
         </label>
 
         {modoEscolha ? (
@@ -84,7 +99,6 @@ const Quina = () => {
             <div className="text-center mb-5">
               <h3 className="text-lg font-semibold">Números Escolhidos: {numerosEscolhidos.length}/9</h3>
               {numerosEscolhidos.length < 5 && <span className="text-red-500">Escolha pelo menos 5 números!</span>}
-              {mensagemErro && <span className="text-red-500">{mensagemErro}</span>}
             </div>
 
             <div className="grid grid-cols-5 gap-2">
@@ -104,19 +118,19 @@ const Quina = () => {
           <div>
             <label className="block text-center mb-5">
               <span className="text-gray-700 text-lg mb-1 block sm:text-sm">Selecione quantos números deseja gerar:</span>
-              <select 
+              <select
                 value={quantidadeNumeros}
                 onChange={(e) => setQuantidadeNumeros(parseInt(e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-500"
               >
-                {[...Array(5).keys()].map(i => (
-                  <option key={i + 5} value={i + 5}>{i + 5} Números</option>
+                {[5, 6, 7, 8, 9].map(num => (
+                  <option key={num} value={num}>{num} Números</option>
                 ))}
               </select>
             </label>
 
             <button
-              className="w-full bg-[#260085] text-white font-bold py-2 rounded hover:bg-purple-700 transition duration-300 text-lg sm:py-1 sm:text-base"
+              className="w-full bg-[#260085] text-white font-bold py-2 rounded hover:bg-[#3c00d3] transition duration-300 text-lg sm:py-1 sm:text-base"
               onClick={gerarNumeros}
             >
               Gerar Números
@@ -141,7 +155,7 @@ const Quina = () => {
         {(modoEscolha && numerosEscolhidos.length >= 5) || (!modoEscolha && numerosGerados.length >= 5) ? (
           <div>
             <button
-              className="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-500 transition duration-300 mt-5"
+              className="w-full bg-[#260085] text-white font-bold py-2 rounded hover:bg-green-500 transition duration-300 mt-5"
               onClick={saveToLocal}
             >
               Salvar Jogo
