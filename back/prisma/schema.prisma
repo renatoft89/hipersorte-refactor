@@ -22,6 +22,8 @@ model Users {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   bets      Bet[]    // Add this line
+
+  userGames UserGames[]
 }
 
 model Bet {
@@ -30,9 +32,11 @@ model Bet {
   numbers   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      Users    @relation(fields: [user_id], references: [id])
+
   user_id   Int
+  user      Users    @relation(fields: [user_id], references: [id])
 }
+
 
 model Contest {
   id               String @id @default(uuid())
@@ -41,3 +45,16 @@ model Contest {
   
   @@map("contests") // Nome da tabela no banco (opcional)
 }
+
+model UserGames {
+  id        Int      @id @default(autoincrement()) // Identificador único
+  game_type String   // Tipo de jogo (exemplo: "quina")
+  numbers   String   // Números do jogo, armazenados como JSON
+  createdAt DateTime @default(now()) // Data de criação
+  updatedAt DateTime @updatedAt // Data de última atualização
+
+  // Relacionamento com o modelo Users
+  user      Users    @relation(fields: [user_id], references: [id])
+  user_id   Int      // Chave estrangeira para o usuário
+}
+
