@@ -62,10 +62,10 @@ const getUserGames = async (userId, typeLottery) => {
       const numbers = JSON.parse(game.numbers); // Converte a string para um array
 
       // Retorna o número 3329 (ou qualquer outro que você queira) como primeiro número no array
-      return [...numbers];
+      return  [...numbers]
     });
 
-    return formattedGames; // Retorna o array de arrays formatado
+    return { games: formattedGames }; // Retorna o array de arrays formatado
   } catch (error) {
     // Log de erro para depuração (opcional)
     console.error(`Erro ao buscar jogos para o usuário ${userId} na loteria ${typeLottery}: ${error.message}`);
