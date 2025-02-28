@@ -65,7 +65,7 @@ const getUserGames = async (userId, typeLottery) => {
       return  [...numbers]
     });
 
-    return { games: formattedGames }; // Retorna o array de arrays formatado
+    return { [typeLottery]: formattedGames }; // Retorna o array de arrays formatado
   } catch (error) {
     // Log de erro para depuração (opcional)
     console.error(`Erro ao buscar jogos para o usuário ${userId} na loteria ${typeLottery}: ${error.message}`);
