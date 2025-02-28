@@ -26,30 +26,55 @@ const saveUsersGame = async (userId, gameType, numbers) => {
 };
 
 // Função para obter os jogos apostados de um usuário
-const getUserGames = async (typeLottery, userId) => {
+const getUserGames = async (userId, typeLottery) => {
   try {
     // Validação de tipo de loteria
-    if (!['mega', 'lotofacil', 'quina'].includes(typeLottery)) {
-      throw new Error("Tipo de loteria inválido. Os tipos válidos são: mega, lotofacil ou quina.");
+    const validTypes = ['mega', 'lotofacil', 'quina'];
+    if (!validTypes.includes(typeLottery)) {
+      throw new Error(`Tipo de loteria inválido. Os tipos válidos são: ${validTypes.join(', ')}.`);
+    }
+
+    // Convertendo o userId para número inteiro
+    const userIdNumber = parseInt(userId, 10);
+
+    // Verificando se a conversão foi bem-sucedida
+    if (isNaN(userIdNumber)) {
+      throw new Error("O ID do usuário deve ser um número válido.");
     }
 
     // Buscando os jogos do usuário no banco, filtrados pelo tipo de loteria
     const userGames = await prisma.userGames.findMany({
       where: {
-        user_id: userId,
+        user_id: userIdNumber, // Passando o userId como número
         game_type: typeLottery,
       },
     });
 
     // Caso o usuário não tenha jogos para o tipo de loteria
     if (userGames.length === 0) {
-      return { message: "Nenhum jogo encontrado para este usuário e tipo de loteria." };
+      return { message: `Nenhum jogo encontrado para o usuário ${userIdNumber} na loteria ${typeLottery}.` };
     }
 
-    return userGames;
+    // Transformando os jogos no formato desejado (array de arrays)
+    const formattedGames = userGames.map((game) => {
+      // Supondo que `game.numbers` seja uma string (por exemplo: "[3328,2,4,5,6,8,9,10,12,13,14,15,16,17,18,19,20,21,23,24,25]")
+      // Converta essa string para um array de números
+      const numbers = JSON.parse(game.numbers); // Converte a string para um array
+
+      // Retorna o número 3329 (ou qualquer outro que você queira) como primeiro número no array
+      return [...numbers];
+    });
+
+    return formattedGames; // Retorna o array de arrays formatado
   } catch (error) {
-    throw new Error(`Erro ao buscar jogos do usuário: ${error.message}`);
+    // Log de erro para depuração (opcional)
+    console.error(`Erro ao buscar jogos para o usuário ${userId} na loteria ${typeLottery}: ${error.message}`);
+
+    // Lançando o erro com uma mensagem amigável
+    throw new Error(`Erro ao buscar jogos: ${error.message}`);
   }
 };
+
+
 
 module.exports = { saveUsersGame, getUserGames };

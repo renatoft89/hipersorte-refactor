@@ -5,6 +5,6 @@ const { saveUsersGameController, getUserGamesController } = require('../../contr
 const userGamesRouter = express.Router();
 
 userGamesRouter.get('/:userId/:typeLottery', getUserGamesController);
-userGamesRouter.post('/save', saveUsersGameController);
+userGamesRouter.post('/:typeLottery/save', saveUsersGameController);
 
 module.exports = userGamesRouter;
