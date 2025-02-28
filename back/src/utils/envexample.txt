@@ -9,3 +9,78 @@ DATABASE_URL="mysql://root:12345678@localhost:3306/loto_results"
 PORT=3001
 
 docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=senha-mysql -e MYSQL_DATABASE=loto_results -e MYSQL_USER=renatoft89 -e MYSQL_PASSWORD=senha-mysql -p 3306:3306 -d mysql:latest
+
+###############REQUESTS########################################################
+
+GET/getusergames
+http://localhost:3001/usergames/1/loto
+
+POST/SaveUsersGames
+http://localhost:3001/usergames/mega/save
+
+{
+  "userId": 1,
+  "data": [
+    3329,
+    1,
+    2,
+    3,
+    7,
+    8,
+    9,
+    10,
+    11,
+    14,
+    15,
+    17,
+    19,
+    20,
+    23,
+    24
+]
+}
+
+
+GET/Concursos
+http://localhost:3001/contest/quina
+
+POST/LoginAuthUser
+http://localhost:3001/login/auth
+
+{
+	"email": "renato.alves@gmail.com",
+  "password": "123456r"
+}
+
+PUT/updatedUsers
+http://localhost:3001/update/user/2
+
+{
+  "name": "Renato Alves",
+  "email": "renato.alves@gmail.com",
+  "password": "123456s",
+  "role": "admin"
+}
+
+
+POST/registerUsers
+http://localhost:3001/register/user
+
+{
+  "name": "TESTE444",
+  "email": "teste444.silva@email.com",
+  "password": "senhaHash123",
+  "role": "admin"
+}
+
+
+GET/resultsQuina
+http://localhost:3001/results/quina
+
+GET/resultsLoto
+http://localhost:3001/results/lotofacil
+
+GET/resultsMega
+http://localhost:3001/results/mega
+
+##############################################################################
