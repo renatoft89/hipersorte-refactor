@@ -54,9 +54,27 @@ export const getSavedUserBets = async (endpoint, typeLottery) => {
 
 };
 
+export const saveUserLotteryBet = async (userId, lotteryType, data) => {
+  
+  const body = {
+    userId,
+    lotteryType,
+    data
+  }
+  
 
-export const saveUserLotteryBet = async (userId, lotteryType, betData) => {
-  // lógica para salvar a aposta, considerando o tipo de loteria (Mega-Sena, Quina, Lotofácil)
+  try {
+    // Fazendo a requisição POST com axios para salvar os dados no servidor
+    const response = await api.post(`usergames/${lotteryType}/save`, body);
+
+    // Verifica a resposta e retorna o resultado
+    console.log('Aposta salva com sucesso:', response.data);
+    return response.data; // Retorna os dados da resposta, caso necessário para processamento posterior
+
+  } catch (error) {
+    console.error('Erro ao salvar a aposta:', error); // Log do erro
+    throw error; // Relança o erro para ser tratado em outro lugar
+  }
 };
 
 export const getNextContest = async (endpoint, typeLottery) => {

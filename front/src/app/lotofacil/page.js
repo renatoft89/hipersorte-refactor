@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { getNextContest } from '../../services/requests'; // Função para buscar o próximo concurso
+import { getNextContest, saveUserLotteryBet } from '../../services/requests'; // Função para buscar o próximo concurso
 
 const Lotofacil = () => {
   const [generatedNumbers, setGeneratedNumbers] = useState([]); // Números gerados
@@ -67,7 +67,7 @@ const Lotofacil = () => {
     }
   };
 
-  const saveToLocal = () => {
+  const saveToLocal = async () => {
     const existingData = JSON.parse(localStorage.getItem('resultadosLotofacil')) || []; // Dados existentes no localStorage
     const numbersToSave = isChoosingMode ? [...chosenNumbers] : [...generatedNumbers]; // Escolhe entre os números escolhidos ou gerados
     const sortedGeneratedNumbers = numbersToSave.sort((a, b) => a - b); // Ordena os números gerados
@@ -87,11 +87,20 @@ const Lotofacil = () => {
     existingData.push([nextContest, ...sortedGeneratedNumbers]);
     localStorage.setItem('resultadosLotofacil', JSON.stringify(existingData)); // Salva no localStorage
   
-    setSavedMessage("Jogo salvo com sucesso!"); // Mensagem de sucesso ao salvar
-    setTimeout(() => setSavedMessage(""), 8000); // Limpa a mensagem de sucesso após 8 segundos
+    // Chama a função para salvar a aposta no servidor
+    const userId = 1; // Fixo por enquanto
+    const lotteryType = 'lotofacil'; // Tipo da loteria
+    const betData = [nextContest, ...sortedGeneratedNumbers]; // Dados da aposta
+  
+    try {
+      await saveUserLotteryBet(userId, lotteryType, betData); // Chama a função para salvar a aposta
+      setSavedMessage("Jogo salvo com sucesso!"); // Mensagem de sucesso ao salvar
+      setTimeout(() => setSavedMessage(""), 8000); // Limpa a mensagem de sucesso após 8 segundos
+    } catch (error) {
+      console.error("Erro ao salvar a aposta:", error);
+      alert("Erro ao salvar a aposta. Tente novamente.");
+    }
   };
-  
-  
 
   return (
     <div className="flex items-center justify-center">
