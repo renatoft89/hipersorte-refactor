@@ -19,7 +19,7 @@ const MegaSena = () => {
       try {
         // Chama a função getNextContest para fazer a requisição à API
         // A função retorna um objeto contendo o próximo concurso
-        const { currentContest } = await getNextContest('/contest/mega');
+        const currentContest = await getNextContest('/contest', 'mega');
         // Atualiza o estado 'nextContest' com o valor de currentContest
         // Isso faz com que a interface exiba o próximo concurso ao usuário
         setNextContest(currentContest);

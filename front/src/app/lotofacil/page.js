@@ -19,7 +19,8 @@ const Lotofacil = () => {
     const fetchNextContest = async () => {
       try {
         // Chama a função getNextContest para fazer a requisição à API
-        const { currentContest } = await getNextContest('/contest/lotofacil');
+        const currentContest  = await getNextContest('/contest', 'lotofacil');
+               
         setNextContest(currentContest); // Atualiza o estado com o próximo concurso
       } catch (error) {
         console.error("Erro ao buscar o próximo concurso:", error);

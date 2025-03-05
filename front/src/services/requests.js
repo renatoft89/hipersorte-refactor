@@ -34,25 +34,35 @@ export const authUser = async (endpoint, body) => {
   }
 };*/
 
-export const getResultsLoto = async () => {
-  // Dados simulados do concurso 3231 da Lotofácil com 15 números
-  return [[3328, 1, 2, 3, 4, 5, 6, 9, 16, 18, 19, 20, 22, 23, 24, 25]]; // Exemplo de dezenas da Lotofácil
-};
-
-export const getResultsMega = async () => {
+export const GetDrawResults = async (endpoint, typeLottery) => {
   // Dados simulados do concurso 3231 da Megasena com 15 números
-  return [[2791, 2, 3, 11, 25, 37, 43]]; // Exemplo de dezenas da Megasena
+  // return [[2791, 2, 3, 11, 25, 37, 43]]; // Exemplo de dezenas da Megasena
+  const  response   = await api.get(`${endpoint}/${typeLottery}`)
+    
+  return response.data
+  
+  
 };
 
-export const getResultsQuina = async () => {
-  // Dados simulados do concurso 3231 da Megasena com 15 números
-  return [[6570, 28, 37, 53 ,64, 70]]; // Exemplo de dezenas da Megasena
+export const getSavedUserBets = async (endpoint, typeLottery) => {
+  const response = await api.get(`${endpoint}/${typeLottery}`);
+
+  // console.log(response.data);
+  
+
+  return response.data;
+
 };
 
-export const getNextContest = async (endpoint) => {
-  const { data } = await api.get(endpoint)
 
-  return data[0];
+export const saveUserLotteryBet = async (userId, lotteryType, betData) => {
+  // lógica para salvar a aposta, considerando o tipo de loteria (Mega-Sena, Quina, Lotofácil)
+};
+
+export const getNextContest = async (endpoint, typeLottery) => {
+  const response = await api.get(`${endpoint}/${typeLottery}`);  
+
+  return response.data[0].currentContest;
 };
 
 

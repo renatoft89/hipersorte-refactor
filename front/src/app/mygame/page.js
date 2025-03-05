@@ -1,65 +1,89 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { getResultsLoto, getResultsMega, getResultsQuina } from '@/services/requests'; // Importando a função para Quina
+import { GetDrawResults, getSavedUserBets } from '../../services/requests';
 
 const MyGame = () => {
+  // Estados
   const [jogosSalvos, setJogosSalvos] = useState([]);
   const [resultApi, setResultApi] = useState([]);
   const [acertosPorJogo, setAcertosPorJogo] = useState([]);
-  const [loteriaSelecionada, setLoteriaSelecionada] = useState('lotofacil');
+  const [loteriaSelecionada, setLoteriaSelecionada] = useState('mega');
   const [concursoSelecionado, setConcursoSelecionado] = useState('');
   const [concursosDisponiveis, setConcursosDisponiveis] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Opções de loterias
   const loterias = [
-    { nome: 'Mega Sena', valor: 'MegaSena' },
+    { nome: 'Mega Sena', valor: 'mega' },
     { nome: 'Lotofácil', valor: 'lotofacil' },
     { nome: 'Quina', valor: 'quina' }
   ];
 
+  // Busca os resultados da loteria selecionada
   useEffect(() => {
     const fetchResults = async () => {
-      let data = [];
-      if (loteriaSelecionada === 'lotofacil') {
-        data = await getResultsLoto();
-      } else if (loteriaSelecionada === 'MegaSena') {
-        data = await getResultsMega();
-      } else if (loteriaSelecionada === 'quina') { // Adicionando verificação para Quina
-        data = await getResultsQuina();
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await GetDrawResults('drawresults', loteriaSelecionada);
+        setResultApi(data);
+        setConcursosDisponiveis(data); // Assume que data contém os concursos disponíveis
+      } catch (err) {
+        setError('Erro ao buscar resultados da loteria.');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-
-      setResultApi(data);
-      setConcursosDisponiveis(data); // Assume que data contém os concursos disponíveis
     };
 
     fetchResults();
-    const dadosSalvos = JSON.parse(localStorage.getItem(`resultados${loteriaSelecionada.charAt(0).toUpperCase() + loteriaSelecionada.slice(1)}`)) || [];
-    
-    // Padroniza os números dos jogos salvos para inteiros
-    const jogosSalvosComNumerosInteiros = dadosSalvos.map(jogo => [jogo[0], ...jogo.slice(1).map(num => parseInt(num, 10))]);
-    setJogosSalvos(jogosSalvosComNumerosInteiros);
   }, [loteriaSelecionada]);
 
+  // Busca os jogos salvos do usuário
   useEffect(() => {
-    if (jogosSalvos.length > 0 && resultApi.length > 0 && concursoSelecionado) {
-      const resultadoAtual = resultApi.find(concurso => concurso[0] === parseInt(concursoSelecionado));
-      if (resultadoAtual) {
-        // Converte os números sorteados para inteiros
-        const resultNumeros = resultadoAtual.slice(1).map(num => parseInt(num, 10));
-
-        const novosAcertos = jogosSalvos.map(jogo => {
-          if (jogo[0] === resultadoAtual[0]) {
-            // Converte os números dos jogos salvos para inteiros e compara com os números sorteados
-            const acertos = jogo.slice(1).map(num => parseInt(num, 10)).filter(numero => resultNumeros.includes(numero));
-
-            return { jogo, acertos };
-          }
-          return { jogo, acertos: [] };
-        });
-
-        setAcertosPorJogo(novosAcertos);
+    const fetchSavedBets = async () => {
+      try {
+        const dadosSalvos = await getSavedUserBets('usergames/1', loteriaSelecionada);
+        // Converte todos os números para strings para facilitar a comparação
+        const jogosSalvosFormatados = dadosSalvos.map(jogo => 
+          jogo.map(numero => numero.toString())
+        );
+        setJogosSalvos(jogosSalvosFormatados);
+      } catch (err) {
+        setError('Erro ao buscar jogos salvos.');
+        console.error(err);
       }
-    }
+    };
+
+    fetchSavedBets();
+  }, [loteriaSelecionada]);
+
+  // Calcula os acertos por jogo quando o concurso é selecionado
+  useEffect(() => {
+    if (!jogosSalvos.length || !resultApi.length || !concursoSelecionado) return;
+
+    // Encontrar o resultado do concurso selecionado
+    const resultadoAtual = resultApi.find(concurso => 
+      concurso[0] === concursoSelecionado.toString() // Converte para string para comparação
+    );
+
+    if (!resultadoAtual) return;
+
+    // Obtém os números sorteados, excluindo o índice do concurso
+    const numerosSorteados = resultadoAtual.slice(1);
+
+    // Calcula os acertos para cada jogo salvo
+    const novosAcertos = jogosSalvos
+      .filter(jogo => jogo[0] === resultadoAtual[0]) // Filtra apenas os jogos do mesmo concurso
+      .map(jogo => {
+        const numerosJogo = jogo.slice(1);
+        const acertos = numerosJogo.filter(numero => numerosSorteados.includes(numero));
+        return { jogo, acertos };
+      });
+
+    setAcertosPorJogo(novosAcertos);
   }, [jogosSalvos, resultApi, concursoSelecionado]);
 
   return (
@@ -106,7 +130,11 @@ const MyGame = () => {
         </div>
 
         {/* Exibe resultados com base nos jogos salvos e no concurso selecionado */}
-        {acertosPorJogo.length > 0 ? (
+        {loading ? (
+          <p className="text-center">Carregando...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : acertosPorJogo.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
             {acertosPorJogo.map((item, index) => (
               <div key={index} className="bg-white p-4 rounded-lg shadow-md">

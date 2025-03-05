@@ -16,7 +16,7 @@ const Quina = () => {
   useEffect(() => {
     const fetchNextContest = async () => {
       try {
-        const { currentContest } = await getNextContest('/contest/quina');
+        const currentContest = await getNextContest('/contest', 'quina');
         setNextContest(currentContest);
       } catch (error) {
         console.error("Erro ao buscar o próximo concurso:", error);
