@@ -85,7 +85,7 @@ const MegaSena = () => {
   
     // Chama a função para salvar a aposta no servidor
     const userId = 1; // Fixo por enquanto
-    const lotteryType = 'quina'; // Tipo da loteria
+    const lotteryType = 'mega'; // Tipo da loteria
     const betData = [nextContest, ...numerosGeradosOrdenados]; // Dados da aposta
   
     try {
