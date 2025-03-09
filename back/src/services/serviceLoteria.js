@@ -7,52 +7,50 @@ const serviceResultLoteria = async (typeLottery) => {
   console.log(`Buscando os resultados da ${typeLottery}...`);
 
   try {
-    // Validação do tipo de loteria
     if (!['mega', 'lotofacil', 'quina'].includes(typeLottery)) {
       throw new Error('Tipo de loteria inválido. Use "mega", "lotofacil" ou "quina".');
     }
 
-    // Obtendo os resultados da API
     const resultados = await getResultsLoteria(typeLottery);
 
-    // Formata os números para incluir o concurso na posição zero
-    const formattedNumbers = [resultados.concurso, ...resultados.numeros];
+    // Formata todos os números para string com dois dígitos
+    const formattedNumbers = [
+      resultados.concurso.toString(),
+      ...resultados.numeros.map(num => num.toString().padStart(2, '0'))
+    ];
 
-    // Converte os números para string para armazenar no banco
     const numbersString = JSON.stringify(formattedNumbers);
 
-    // Verifica se já existe um registro com o mesmo número de concurso para o tipo de loteria
     const existingBet = await prisma.bet.findFirst({
       where: { 
         game_type: typeLottery, 
         numbers: {
-          contains: resultados.concurso.toString() // Verifica se o concurso já foi registrado
+          contains: resultados.concurso.toString()
         }
       }
     });
 
     if (existingBet) {
       console.log(`O concurso ${resultados.concurso} já foi registrado para a loteria ${typeLottery}. Nenhuma alteração feita.`);
-      return resultados; // Retorna os resultados sem fazer nada
+      return resultados;
     }
 
-    // Se não houver registros, insere um novo dado
     await prisma.bet.create({
       data: {
         game_type: typeLottery,
         numbers: numbersString,
-        user_id: 1 // Ajuste conforme necessário
+        user_id: 1
       }
     });
     console.log(`Novo resultado para o concurso ${resultados.concurso} da loteria ${typeLottery} inserido.`);
 
     return resultados;
-
   } catch (error) {
     console.error(`Erro ao salvar os resultados da ${typeLottery}:`, error);
     throw new Error('Erro interno do servidor');
   }
 };
+
 
 
 const serviceContextLottery = async (typeLottery) => {
