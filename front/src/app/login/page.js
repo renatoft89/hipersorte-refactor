@@ -38,7 +38,7 @@ const Login = () => {
   
     try {
       const { user } = await authUser('/login/auth', dataLogin);
-      addUserLocal({ name: user.name, email: user.email, token: user.token, role: user.role });
+      addUserLocal({id: user.id, name: user.name, email: user.email, token: user.token, role: user.role });
       router.push("/"); // Redireciona para a página inicial após o login
     } catch (error) {
       setErr(error.response?.data?.message || error.message);

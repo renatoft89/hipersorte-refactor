@@ -88,7 +88,9 @@ const Lotofacil = () => {
     localStorage.setItem('resultadosLotofacil', JSON.stringify(existingData)); // Salva no localStorage
   
     // Chama a função para salvar a aposta no servidor
-    const userId = 1; // Fixo por enquanto
+    const user = JSON.parse(localStorage.getItem('USER')); // pega o usuário logado
+        
+    const userId = user.id // define o id do usuário
     const lotteryType = 'lotofacil'; // Tipo da loteria
     const betData = [nextContest, ...sortedGeneratedNumbers]; // Dados da aposta
   

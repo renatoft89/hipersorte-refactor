@@ -1,5 +1,5 @@
 export const addUserLocal = (user) => {
-  const { name, email, role, token } = user;
+  const {id, name, email, role, token } = user;
   
-  localStorage.setItem('USER', JSON.stringify({ name, email, role, token }));
+  localStorage.setItem('USER', JSON.stringify({ id, name, email, role, token }));
 }

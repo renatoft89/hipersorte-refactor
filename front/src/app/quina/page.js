@@ -57,27 +57,30 @@ const Quina = () => {
     const dadosExistentes = JSON.parse(localStorage.getItem('resultadosQuina')) || []; // Dados existentes no localStorage
     const numerosASeremSalvos = modoEscolha ? [...numerosEscolhidos] : [...numerosGerados]; // Escolhe entre os números escolhidos ou gerados
     const numerosGeradosOrdenados = numerosASeremSalvos.sort((a, b) => a - b); // Ordena os números gerados
-  
+
     // Verifica se o jogo já está salvo (agora com a comparação correta)
     const jogoExistente = dadosExistentes.find(jogo =>
       jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString() // Compara os números gerados sem o concurso
     );
-  
+
     if (jogoExistente) {
       // Exibe o alerta somente quando o jogo já existe
       alert("O jogo já está salvo, crie um novo jogo");
       return; // Retorna antes de salvar para evitar sobrescrever
     }
-  
+
     // Salva os números junto com o concurso, sem sobrescrever os dados existentes
     dadosExistentes.push([nextContest, ...numerosGeradosOrdenados]);
     localStorage.setItem('resultadosQuina', JSON.stringify(dadosExistentes)); // Salva no localStorage
-  
+
     // Chama a função para salvar a aposta no servidor
-    const userId = 1; // Fixo por enquanto
+    const user = JSON.parse(localStorage.getItem('USER')); // pega o usuário logado
+    console.log({ 'id': user.id });
+
+    const userId = user.id // define o id do usuário
     const lotteryType = 'quina'; // Tipo da loteria
     const betData = [nextContest, ...numerosGeradosOrdenados]; // Dados da aposta
-  
+
     try {
       await saveUserLotteryBet(userId, lotteryType, betData); // Chama a função para salvar a aposta
       setMensagemSalvo("Jogo salvo com sucesso!"); // Mensagem de sucesso ao salvar
