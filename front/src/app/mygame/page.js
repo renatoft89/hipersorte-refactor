@@ -45,9 +45,12 @@ const MyGame = () => {
   useEffect(() => {
     const fetchSavedBets = async () => {
       try {
-        const dadosSalvos = await getSavedUserBets('usergames/1', loteriaSelecionada);
+        // Chama a função para salvar a aposta no servidor
+        const user = JSON.parse(localStorage.getItem('USER')); // pega o usuário logado
+
+        const dadosSalvos = await getSavedUserBets(`usergames/${user.id}`, loteriaSelecionada);
         // Converte todos os números para strings para facilitar a comparação
-        const jogosSalvosFormatados = dadosSalvos.map(jogo => 
+        const jogosSalvosFormatados = dadosSalvos.map(jogo =>
           jogo.map(numero => numero.toString())
         );
         setJogosSalvos(jogosSalvosFormatados);
@@ -65,7 +68,7 @@ const MyGame = () => {
     if (!jogosSalvos.length || !resultApi.length || !concursoSelecionado) return;
 
     // Encontrar o resultado do concurso selecionado
-    const resultadoAtual = resultApi.find(concurso => 
+    const resultadoAtual = resultApi.find(concurso =>
       concurso[0] === concursoSelecionado.toString() // Converte para string para comparação
     );
 
@@ -95,7 +98,7 @@ const MyGame = () => {
         <div className="flex flex-col sm:flex-row sm:space-x-4 mb-4">
           <div className="w-full sm:w-1/2">
             <label htmlFor="loteria" className="block text-center text-lg mb-2">Selecione a Loteria:</label>
-            <select 
+            <select
               id="loteria"
               value={loteriaSelecionada}
               onChange={(e) => {
@@ -114,7 +117,7 @@ const MyGame = () => {
 
           <div className="w-full sm:w-1/2">
             <label htmlFor="concurso" className="block text-center text-lg mb-2">Selecione o Concurso:</label>
-            <select 
+            <select
               id="concurso"
               value={concursoSelecionado}
               onChange={(e) => setConcursoSelecionado(e.target.value)}
@@ -141,8 +144,8 @@ const MyGame = () => {
                 <h3 className="text-lg font-semibold">Concurso: {item.jogo[0]}</h3>
                 <div className="flex flex-wrap justify-center mt-2">
                   {item.jogo.slice(1).map((numero, i) => (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       className={`flex items-center justify-center rounded-full h-12 w-12 text-xl m-1 shadow-lg 
                         ${item.acertos.includes(numero) ? 'bg-green-500 text-white border-2 border-green-600' : 'bg-purple-600 text-white'}`}>
                       {numero}

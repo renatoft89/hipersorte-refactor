@@ -68,7 +68,7 @@ export const saveUserLotteryBet = async (userId, lotteryType, data) => {
     const response = await api.post(`usergames/${lotteryType}/save`, body);
 
     // Verifica a resposta e retorna o resultado
-    console.log('Aposta salva com sucesso:', response.data);
+    console.log('Aposta salva com sucesso:');
     return response.data; // Retorna os dados da resposta, caso necessário para processamento posterior
 
   } catch (error) {
