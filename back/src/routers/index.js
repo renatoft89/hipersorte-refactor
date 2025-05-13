@@ -9,8 +9,9 @@ const contestLotteryRouter = require('./contest/index');
 const registerRouter = require('./users/index');
 const updateUserRouter = require('./users/index');
 const authRouter = require('./users/index');
+const authMiddleware = require('../middlewares/auth.middleware');
 
-router.use('/results', resultsRouter);
+router.use('/results', authMiddleware, resultsRouter);
 router.use('/userGames', userGamesRouter);
 router.use('/drawresults', drawResultsRouter);
 router.use('/contest', contestLotteryRouter);
