@@ -17,63 +17,128 @@ export const authUser = async (endpoint, body) => {
   return data;
 };
 
-/*export const getResultsLoto = async (apiEndPoint) => {
-  try {
-    const response = await axios.get(apiEndPoint);
-    // const numeroConcurso = response.data.numero_concurso; // Supondo que a API retorna o número do concurso
-    const numeroConcurso = 2236
-    const dezenas = response.data.dezenas.map(num => parseInt(num, 10)); // Converte as dezenas para inteiros
-
-    // Combina o número do concurso e as dezenas em um único array
-    const arrayReturn = [[numeroConcurso, ...dezenas]];
-    
-    return arrayReturn;
-  } catch (error) {
-    console.error('Error fetching results:', error);
-    return [];
-  }
-};*/
 
 export const GetDrawResults = async (endpoint, typeLottery) => {
-  // Dados simulados do concurso 3231 da Megasena com 15 números
-  // return [[2791, 2, 3, 11, 25, 37, 43]]; // Exemplo de dezenas da Megasena
-  const  response   = await api.get(`${endpoint}/${typeLottery}`)
+  try {
+    const dataUser = localStorage.getItem('USER');
+    const token = JSON.parse(dataUser).token;
+    console.log('Token:', token); // Adicione este log para depuração
     
-  return response.data
-  
-  
+    const response = await api.get(`${endpoint}/${typeLottery}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro na requisição:", error);
+    throw error;
+  }
 };
 
 export const getSavedUserBets = async (endpoint, typeLottery) => {
-  const response = await api.get(`${endpoint}/${typeLottery}`);
-
-  // console.log(response.data);
-  
-
-  return response.data;
+  try {
+    const dataUser = localStorage.getItem('USER');
+    const token = JSON.parse(dataUser).token;
+    console.log('Token:', token); // Adicione este log para depuração
+    
+    const response = await api.get(`${endpoint}/${typeLottery}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro na requisição:", error);
+    throw error;
+  }
 
 };
 
-export const saveUserLotteryBet = async (userId, lotteryType, data) => {
-  
-  const body = {
-    userId,
-    lotteryType,
-    data
+export class AuthenticationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'AuthenticationError';
+    this.status = 401;
   }
-  
+}
 
+export class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ValidationError';
+    this.status = 400;
+  }
+}
+
+export class ServerError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = 'ServerError';
+    this.status = status || 500;
+  }
+}
+
+export const saveUserLotteryBet = async (userId, lotteryType, data) => {
   try {
-    // Fazendo a requisição POST com axios para salvar os dados no servidor
-    const response = await api.post(`usergames/${lotteryType}/save`, body);
+    // Obtém o token do localStorage
+    const dataUser = localStorage.getItem('USER');
+    
+    // Verifica se o usuário está autenticado
+    if (!dataUser) {
+      throw new AuthenticationError('Usuário não autenticado');
+    }
+    
+    const user = JSON.parse(dataUser);
+    const token = user.token;
 
-    // Verifica a resposta e retorna o resultado
-    console.log('Aposta salva com sucesso:');
-    return response.data; // Retorna os dados da resposta, caso necessário para processamento posterior
+    // Validação básica dos dados
+    if (!Array.isArray(data) || data.length < 6) {
+      throw new ValidationError('Dados da aposta inválidos');
+    }
+    
+    // Corpo da requisição
+    const body = {
+      userId,
+      lotteryType,
+      data
+    };
+    
+    // Fazendo a requisição POST com o token no header
+    const response = await api.post(
+      `usergames/${lotteryType}/save`,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log('Aposta salva com sucesso:', response.data);
+    return response.data;
 
   } catch (error) {
-    console.error('Erro ao salvar a aposta:', error); // Log do erro
-    throw error; // Relança o erro para ser tratado em outro lugar
+    console.error('Erro ao salvar a aposta:', error);
+    
+    // Tratamento específico para token inválido/expirado
+    if (error.response?.status === 401) {
+      localStorage.removeItem('USER');
+      throw new AuthenticationError('Sessão expirada. Por favor, faça login novamente.');
+    }
+    
+    // Se já for um erro customizado, apenas repassa
+    if (error instanceof AuthenticationError || 
+        error instanceof ValidationError || 
+        error instanceof ServerError) {
+      throw error;
+    }
+    
+    // Para outros erros, cria um ServerError
+    throw new ServerError(
+      error.response?.data?.message || 'Erro ao salvar a aposta',
+      error.response?.status
+    );
   }
 };
 

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { getNextContest, saveUserLotteryBet } from '../../services/requests';
 
 const MegaSena = () => {
+  const router = useRouter();
   const [numerosGerados, setNumerosGerados] = useState([]);
   const [numerosEscolhidos, setNumerosEscolhidos] = useState([]);
   const [mensagemSalvo, setMensagemSalvo] = useState("");
@@ -11,35 +13,26 @@ const MegaSena = () => {
   const [modoEscolha, setModoEscolha] = useState(false);
   const [quantidadeNumeros, setQuantidadeNumeros] = useState(6);
   const [nextContest, setNextContest] = useState();
+  const [redirecionando, setRedirecionando] = useState(false); // Novo estado para controle do redirecionamento
 
   // useEffect para buscar o próximo concurso ao carregar a página
   useEffect(() => {
-    // Função assíncrona para buscar o próximo concurso
     const fetchNextContest = async () => {
       try {
-        // Chama a função getNextContest para fazer a requisição à API
-        // A função retorna um objeto contendo o próximo concurso
         const currentContest = await getNextContest('/contest', 'mega');
-        // Atualiza o estado 'nextContest' com o valor de currentContest
-        // Isso faz com que a interface exiba o próximo concurso ao usuário
         setNextContest(currentContest);
       } catch (error) {
-        // Caso ocorra um erro durante a requisição, o erro é capturado e exibido no console
-        // Isso ajuda a depurar problemas de comunicação com a API ou outros erros
         console.error("Erro ao buscar o próximo concurso:", error);
       }
     };
 
-    // Chama a função fetchNextContest para buscar o próximo concurso assim que o componente for montado
-    // Isso é feito uma única vez, já que o array de dependências do useEffect está vazio
     fetchNextContest();
-  }, []); // O array vazio [] garante que o efeito seja executado apenas uma vez no carregamento inicial do componente
-
+  }, []);
 
   const gerarNumeros = () => {
     const numeros = new Set();
     while (numeros.size < quantidadeNumeros) {
-      const numeroAleatorio = Math.floor(Math.random() * 60) + 1; // 1 a 60
+      const numeroAleatorio = Math.floor(Math.random() * 60) + 1;
       numeros.add(numeroAleatorio);
     }
     const numerosArray = Array.from(numeros).sort((a, b) => a - b);
@@ -55,7 +48,7 @@ const MegaSena = () => {
     } else if (numerosEscolhidos.length < 15) {
       setNumerosEscolhidos([...numerosEscolhidos, numero]);
       if (numerosEscolhidos.length >= 5) {
-        setMensagemErro(""); // Limpa a mensagem de erro quando a quantidade mínima é atingida
+        setMensagemErro("");
       }
     }
     if (numerosEscolhidos.length >= 15) {
@@ -64,39 +57,76 @@ const MegaSena = () => {
   };
 
   const saveToLocal = async () => {
-    const dadosExistentes = JSON.parse(localStorage.getItem('resultadosQuina')) || []; // Dados existentes no localStorage
-    const numerosASeremSalvos = modoEscolha ? [...numerosEscolhidos] : [...numerosGerados]; // Escolhe entre os números escolhidos ou gerados
-    const numerosGeradosOrdenados = numerosASeremSalvos.sort((a, b) => a - b); // Ordena os números gerados
-
-    // Verifica se o jogo já está salvo (agora com a comparação correta)
-    const jogoExistente = dadosExistentes.find(jogo =>
-      jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString() // Compara os números gerados sem o concurso
-    );
-
-    if (jogoExistente) {
-      // Exibe o alerta somente quando o jogo já existe
-      alert("O jogo já está salvo, crie um novo jogo");
-      return; // Retorna antes de salvar para evitar sobrescrever
-    }
-
-    // Salva os números junto com o concurso, sem sobrescrever os dados existentes
-    dadosExistentes.push([nextContest, ...numerosGeradosOrdenados]);
-    localStorage.setItem('resultadosQuina', JSON.stringify(dadosExistentes)); // Salva no localStorage
-
-    // Chama a função para salvar a aposta no servidor
-    const user = JSON.parse(localStorage.getItem('USER')); // pega o usuário logado
-    
-    const userId = user.id // define o id do usuário
-    const lotteryType = 'mega'; // Tipo da loteria
-    const betData = [nextContest, ...numerosGeradosOrdenados]; // Dados da aposta
-
     try {
-      await saveUserLotteryBet(userId, lotteryType, betData); // Chama a função para salvar a aposta
-      setMensagemSalvo("Jogo salvo com sucesso!"); // Mensagem de sucesso ao salvar
-      setTimeout(() => setMensagemSalvo(""), 8000); // Limpa a mensagem de sucesso após 8 segundos
+      // Verifica se há um usuário logado
+      const userData = localStorage.getItem('USER');
+      if (!userData) {
+        setMensagemErro("Você precisa estar logado para salvar. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      // Parseia os dados do usuário
+      let user;
+      try {
+        user = JSON.parse(userData);
+      } catch (parseError) {
+        console.error('Erro ao parsear dados do usuário:', parseError);
+        setMensagemErro("Dados inválidos. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      // Verifica se o usuário tem ID
+      if (!user?.id) {
+        setMensagemErro("Sessão inválida. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      const dadosExistentes = JSON.parse(localStorage.getItem('resultadosQuina')) || [];
+      const numerosASeremSalvos = modoEscolha ? [...numerosEscolhidos] : [...numerosGerados];
+      const numerosGeradosOrdenados = numerosASeremSalvos.sort((a, b) => a - b);
+
+      const jogoExistente = dadosExistentes.find(jogo =>
+        jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString()
+      );
+
+      if (jogoExistente) {
+        alert("O jogo já está salvo, crie um novo jogo");
+        return;
+      }
+
+      dadosExistentes.push([nextContest, ...numerosGeradosOrdenados]);
+      localStorage.setItem('resultadosQuina', JSON.stringify(dadosExistentes));
+
+      const userId = user.id;
+      const lotteryType = 'mega';
+      const betData = [nextContest, ...numerosGeradosOrdenados];
+
+      await saveUserLotteryBet(userId, lotteryType, betData);
+      setMensagemSalvo("Jogo salvo com sucesso!");
+      setTimeout(() => setMensagemSalvo(""), 8000);
+      
     } catch (error) {
       console.error("Erro ao salvar a aposta:", error);
-      alert("Erro ao salvar a aposta. Tente novamente.");
+      
+      if (error.response?.status === 401 || error.message.includes('autenticado') || error.message.includes('login')) {
+        setMensagemErro("Sessão expirada. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+      } else {
+        setMensagemErro("Erro ao salvar o jogo. Tente novamente.");
+      }
+    } finally {
+      setRedirecionando(false);
     }
   };
 
@@ -185,17 +215,20 @@ const MegaSena = () => {
             <button
               className="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-500 transition duration-300 mt-5"
               onClick={saveToLocal}
+              disabled={redirecionando} // Desabilita o botão durante o redirecionamento
             >
-              Salvar Jogo
+              {redirecionando ? 'Redirecionando...' : 'Salvar Jogo'}
             </button>
             {mensagemSalvo && (
               <p className="mt-2 text-green-600 font-semibold text-center">{mensagemSalvo}</p>
+            )}
+            {mensagemErro && (
+              <p className="mt-2 text-red-500 font-semibold text-center">{mensagemErro}</p>
             )}
           </div>
         ) : null}
       </div>
     </div>
-
   );
 };
 

@@ -1,41 +1,40 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { getNextContest, saveUserLotteryBet } from '../../services/requests'; // Função para buscar o próximo concurso
+import { useRouter } from 'next/navigation';
+import { getNextContest, saveUserLotteryBet } from '../../services/requests';
 
 const Lotofacil = () => {
-  const [generatedNumbers, setGeneratedNumbers] = useState([]); // Números gerados
-  const [chosenNumbers, setChosenNumbers] = useState([]); // Números escolhidos
-  const [savedMessage, setSavedMessage] = useState(""); // Mensagem de sucesso ao salvar
-  const [errorMessage, setErrorMessage] = useState(""); // Mensagem de erro
-  const [isChoosingMode, setIsChoosingMode] = useState(false); // Modo de escolha de números
-  const [numberQuantity, setNumberQuantity] = useState(15); // Quantidade de números
-  const [isLoading, setIsLoading] = useState(false); // Estado para controle de loading
-  const [nextContest, setNextContest] = useState(""); // Estado para o próximo concurso
+  const router = useRouter();
+  const [generatedNumbers, setGeneratedNumbers] = useState([]);
+  const [chosenNumbers, setChosenNumbers] = useState([]);
+  const [savedMessage, setSavedMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isChoosingMode, setIsChoosingMode] = useState(false);
+  const [numberQuantity, setNumberQuantity] = useState(15);
+  const [isLoading, setIsLoading] = useState(false);
+  const [nextContest, setNextContest] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
 
-  // useEffect para buscar o próximo concurso ao carregar a página
+  // Busca o próximo concurso
   useEffect(() => {
-    // Função assíncrona para buscar o próximo concurso
     const fetchNextContest = async () => {
       try {
-        // Chama a função getNextContest para fazer a requisição à API
-        const currentContest  = await getNextContest('/contest', 'lotofacil');
-               
-        setNextContest(currentContest); // Atualiza o estado com o próximo concurso
+        const currentContest = await getNextContest('/contest', 'lotofacil');
+        setNextContest(currentContest);
       } catch (error) {
         console.error("Erro ao buscar o próximo concurso:", error);
       }
     };
 
-    // Chama a função fetchNextContest para buscar o próximo concurso assim que o componente for montado
     fetchNextContest();
-  }, []); // O array vazio [] garante que o efeito seja executado apenas uma vez no carregamento inicial do componente
+  }, []);
 
   const generateNumbers = () => {
-    setIsLoading(true); // Ativa o loading
-    setErrorMessage(""); // Limpa mensagem de erro
-    setChosenNumbers([]); // Limpa os números escolhidos
-    setSavedMessage(""); // Limpa a mensagem de sucesso
+    setIsLoading(true);
+    setErrorMessage("");
+    setChosenNumbers([]);
+    setSavedMessage("");
 
     setTimeout(() => {
       const numbers = new Set();
@@ -44,63 +43,98 @@ const Lotofacil = () => {
         numbers.add(randomNumber);
       }
 
-      const numbersArray = Array.from(numbers);
-      numbersArray.sort((a, b) => a - b);
-
-      setGeneratedNumbers(numbersArray); // Atualiza os números gerados
-      setIsLoading(false); // Desativa o loading após o tempo
-    }, 300); // Atraso de 0,3 segundos para simular o loading
+      const numbersArray = Array.from(numbers).sort((a, b) => a - b);
+      setGeneratedNumbers(numbersArray);
+      setIsLoading(false);
+    }, 300);
   };
 
   const selectNumber = (number) => {
     if (chosenNumbers.includes(number)) {
-      setChosenNumbers(chosenNumbers.filter(num => num !== number)); // Remove número escolhido
+      setChosenNumbers(chosenNumbers.filter(num => num !== number));
     } else if (chosenNumbers.length < 20) {
-      setChosenNumbers([...chosenNumbers, number]); // Adiciona número escolhido
+      setChosenNumbers([...chosenNumbers, number]);
       if (chosenNumbers.length >= 14) {
-        setErrorMessage(""); // Limpa a mensagem de erro quando a quantidade mínima é atingida
+        setErrorMessage("");
       }
     }
 
     if (chosenNumbers.length >= 20) {
-      setErrorMessage("You have already chosen the maximum number of numbers!"); // Mensagem de erro para quantidade máxima
+      setErrorMessage("Você já escolheu a quantidade máxima de números!");
     }
   };
 
   const saveToLocal = async () => {
-    const existingData = JSON.parse(localStorage.getItem('resultadosLotofacil')) || []; // Dados existentes no localStorage
-    const numbersToSave = isChoosingMode ? [...chosenNumbers] : [...generatedNumbers]; // Escolhe entre os números escolhidos ou gerados
-    const sortedGeneratedNumbers = numbersToSave.sort((a, b) => a - b); // Ordena os números gerados
-  
-    // Verifica se o jogo já está salvo (agora com a comparação correta)
-    const existingGame = existingData.find(game => 
-      game.slice(1).sort((a, b) => a - b).toString() === sortedGeneratedNumbers.toString() // Compara os números gerados sem o concurso
-    );
-  
-    if (existingGame) {
-      // Exibe o alerta somente quando o jogo já existe
-      alert("Este jogo já foi salvo, crie um novo jogo");
-      return; // Retorna antes de salvar para evitar sobrescrever
-    }
-  
-    // Salva os números junto com o concurso, sem sobrescrever os dados existentes
-    existingData.push([nextContest, ...sortedGeneratedNumbers]);
-    localStorage.setItem('resultadosLotofacil', JSON.stringify(existingData)); // Salva no localStorage
-  
-    // Chama a função para salvar a aposta no servidor
-    const user = JSON.parse(localStorage.getItem('USER')); // pega o usuário logado
-        
-    const userId = user.id // define o id do usuário
-    const lotteryType = 'lotofacil'; // Tipo da loteria
-    const betData = [nextContest, ...sortedGeneratedNumbers]; // Dados da aposta
-  
     try {
-      await saveUserLotteryBet(userId, lotteryType, betData); // Chama a função para salvar a aposta
-      setSavedMessage("Jogo salvo com sucesso!"); // Mensagem de sucesso ao salvar
-      setTimeout(() => setSavedMessage(""), 8000); // Limpa a mensagem de sucesso após 8 segundos
+      // Verifica autenticação
+      const userData = localStorage.getItem('USER');
+      if (!userData) {
+        setErrorMessage("Você precisa estar logado para salvar. Redirecionando para login...");
+        setRedirecting(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      // Parse dos dados do usuário
+      let user;
+      try {
+        user = JSON.parse(userData);
+      } catch (parseError) {
+        console.error('Erro ao parsear dados do usuário:', parseError);
+        setErrorMessage("Dados inválidos. Redirecionando para login...");
+        setRedirecting(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      // Verifica ID do usuário
+      if (!user?.id) {
+        setErrorMessage("Sessão inválida. Redirecionando para login...");
+        setRedirecting(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      const existingData = JSON.parse(localStorage.getItem('resultadosLotofacil')) || [];
+      const numbersToSave = isChoosingMode ? [...chosenNumbers] : [...generatedNumbers];
+      const sortedGeneratedNumbers = numbersToSave.sort((a, b) => a - b);
+
+      const existingGame = existingData.find(game => 
+        game.slice(1).sort((a, b) => a - b).toString() === sortedGeneratedNumbers.toString()
+      );
+
+      if (existingGame) {
+        alert("Este jogo já foi salvo, crie um novo jogo");
+        return;
+      }
+
+      existingData.push([nextContest, ...sortedGeneratedNumbers]);
+      localStorage.setItem('resultadosLotofacil', JSON.stringify(existingData));
+
+      const userId = user.id;
+      const lotteryType = 'lotofacil';
+      const betData = [nextContest, ...sortedGeneratedNumbers];
+
+      await saveUserLotteryBet(userId, lotteryType, betData);
+      setSavedMessage("Jogo salvo com sucesso!");
+      setTimeout(() => setSavedMessage(""), 8000);
+      
     } catch (error) {
       console.error("Erro ao salvar a aposta:", error);
-      alert("Erro ao salvar a aposta. Tente novamente.");
+      
+      if (error.response?.status === 401 || error.message.includes('autenticado') || error.message.includes('login')) {
+        setErrorMessage("Sessão expirada. Redirecionando para login...");
+        setRedirecting(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+      } else {
+        setErrorMessage("Erro ao salvar o jogo. Tente novamente.");
+      }
+    } finally {
+      setRedirecting(false);
     }
   };
 
@@ -168,7 +202,7 @@ const Lotofacil = () => {
             <button
               className="w-full bg-purple-600 text-white font-bold py-2 rounded hover:bg-purple-500 transition duration-300 text-lg sm:py-1 sm:text-base"
               onClick={generateNumbers}
-              disabled={isLoading} // Desabilita o botão enquanto está carregando
+              disabled={isLoading}
             >
               {isLoading ? "Carregando..." : "Gerar Números"}
             </button>
@@ -194,11 +228,15 @@ const Lotofacil = () => {
             <button
               className="w-full bg-purple-600 text-white font-bold py-2 rounded hover:bg-purple-500 transition duration-300 mt-5"
               onClick={saveToLocal}
+              disabled={redirecting}
             >
-              Salvar Jogo
+              {redirecting ? 'Redirecionando...' : 'Salvar Jogo'}
             </button>
             {savedMessage && (
               <p className="mt-2 text-purple-600 font-semibold text-center">{savedMessage}</p>
+            )}
+            {errorMessage && (
+              <p className="mt-2 text-red-500 font-semibold text-center">{errorMessage}</p>
             )}
           </div>
         ) : null}

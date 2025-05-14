@@ -12,8 +12,8 @@ const authRouter = require('./users/index');
 const authMiddleware = require('../middlewares/auth.middleware');
 
 router.use('/results', authMiddleware, resultsRouter);
-router.use('/userGames', userGamesRouter);
-router.use('/drawresults', drawResultsRouter);
+router.use('/userGames', authMiddleware, userGamesRouter);
+router.use('/drawresults',authMiddleware, drawResultsRouter);
 router.use('/contest', contestLotteryRouter);
 router.use('/register', registerRouter.createUserRouter);
 router.use('/update', updateUserRouter.updateUserRouter);
