@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: `http://localhost:${process.env.REACT_APP_API_PORT || '3001'}`,
+  baseURL: `http://localhost:${process.env.PORT || '3001'}`,
   apiEndPoint: `https://apiloterias.com.br/app/v2/resultado?loteria=lotofacil&token=kJdfLjd38Jai2ek&concurso=ultimos1`
 });
 
@@ -22,7 +22,7 @@ export const GetDrawResults = async (endpoint, typeLottery) => {
   try {
     const dataUser = localStorage.getItem('USER');
     const token = JSON.parse(dataUser).token;
-    console.log('Token:', token); // Adicione este log para depuração
+    // console.log('Token:', token); // Adicione este log para depuração
     
     const response = await api.get(`${endpoint}/${typeLottery}`, {
       headers: {

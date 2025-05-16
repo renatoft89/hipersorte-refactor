@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { getNextContest, saveUserLotteryBet } from '../../services/requests';
 
 const Quina = () => {
+  const router = useRouter();
   const [numerosGerados, setNumerosGerados] = useState([]);
   const [numerosEscolhidos, setNumerosEscolhidos] = useState([]);
   const [mensagemSalvo, setMensagemSalvo] = useState("");
@@ -11,8 +13,9 @@ const Quina = () => {
   const [modoEscolha, setModoEscolha] = useState(false);
   const [quantidadeNumeros, setQuantidadeNumeros] = useState(5);
   const [nextContest, setNextContest] = useState();
+  const [redirecionando, setRedirecionando] = useState(false);
 
-  // useEffect para buscar o próximo concurso ao carregar a página
+  // Busca o próximo concurso
   useEffect(() => {
     const fetchNextContest = async () => {
       try {
@@ -29,12 +32,12 @@ const Quina = () => {
   const gerarNumeros = () => {
     const numeros = new Set();
     while (numeros.size < quantidadeNumeros) {
-      const numeroAleatorio = Math.floor(Math.random() * 80) + 1; // 1 a 80
+      const numeroAleatorio = Math.floor(Math.random() * 80) + 1;
       numeros.add(numeroAleatorio);
     }
     const numerosArray = Array.from(numeros).sort((a, b) => a - b);
     setNumerosGerados(numerosArray);
-    setNumerosEscolhidos([]); // Limpa os números escolhidos
+    setNumerosEscolhidos([]);
     setMensagemSalvo("");
     setMensagemErro("");
   };
@@ -42,10 +45,10 @@ const Quina = () => {
   const selecionarNumero = (numero) => {
     if (numerosEscolhidos.includes(numero)) {
       setNumerosEscolhidos(numerosEscolhidos.filter(num => num !== numero));
-    } else if (numerosEscolhidos.length < 9) { // Máximo de 9 números
+    } else if (numerosEscolhidos.length < 9) {
       setNumerosEscolhidos([...numerosEscolhidos, numero]);
       if (numerosEscolhidos.length >= 4) {
-        setMensagemErro(""); // Limpa a mensagem de erro quando a quantidade mínima é atingida
+        setMensagemErro("");
       }
     }
     if (numerosEscolhidos.length >= 9) {
@@ -54,40 +57,76 @@ const Quina = () => {
   };
 
   const saveToLocal = async () => {
-    const dadosExistentes = JSON.parse(localStorage.getItem('resultadosQuina')) || []; // Dados existentes no localStorage
-    const numerosASeremSalvos = modoEscolha ? [...numerosEscolhidos] : [...numerosGerados]; // Escolhe entre os números escolhidos ou gerados
-    const numerosGeradosOrdenados = numerosASeremSalvos.sort((a, b) => a - b); // Ordena os números gerados
-
-    // Verifica se o jogo já está salvo (agora com a comparação correta)
-    const jogoExistente = dadosExistentes.find(jogo =>
-      jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString() // Compara os números gerados sem o concurso
-    );
-
-    if (jogoExistente) {
-      // Exibe o alerta somente quando o jogo já existe
-      alert("O jogo já está salvo, crie um novo jogo");
-      return; // Retorna antes de salvar para evitar sobrescrever
-    }
-
-    // Salva os números junto com o concurso, sem sobrescrever os dados existentes
-    dadosExistentes.push([nextContest, ...numerosGeradosOrdenados]);
-    localStorage.setItem('resultadosQuina', JSON.stringify(dadosExistentes)); // Salva no localStorage
-
-    // Chama a função para salvar a aposta no servidor
-    const user = JSON.parse(localStorage.getItem('USER')); // pega o usuário logado
-    console.log({ 'id': user.id });
-
-    const userId = user.id // define o id do usuário
-    const lotteryType = 'quina'; // Tipo da loteria
-    const betData = [nextContest, ...numerosGeradosOrdenados]; // Dados da aposta
-
     try {
-      await saveUserLotteryBet(userId, lotteryType, betData); // Chama a função para salvar a aposta
-      setMensagemSalvo("Jogo salvo com sucesso!"); // Mensagem de sucesso ao salvar
-      setTimeout(() => setMensagemSalvo(""), 8000); // Limpa a mensagem de sucesso após 8 segundos
+      // Verifica autenticação
+      const userData = localStorage.getItem('USER');
+      if (!userData) {
+        setMensagemErro("Você precisa estar logado para salvar. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      // Parse dos dados do usuário
+      let user;
+      try {
+        user = JSON.parse(userData);
+      } catch (parseError) {
+        console.error('Erro ao parsear dados do usuário:', parseError);
+        setMensagemErro("Dados inválidos. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      // Verifica ID do usuário
+      if (!user?.id) {
+        setMensagemErro("Sessão inválida. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+        return;
+      }
+
+      const dadosExistentes = JSON.parse(localStorage.getItem('resultadosQuina')) || [];
+      const numerosASeremSalvos = modoEscolha ? [...numerosEscolhidos] : [...numerosGerados];
+      const numerosGeradosOrdenados = numerosASeremSalvos.sort((a, b) => a - b);
+
+      const jogoExistente = dadosExistentes.find(jogo =>
+        jogo.slice(1).sort((a, b) => a - b).toString() === numerosGeradosOrdenados.toString()
+      );
+
+      if (jogoExistente) {
+        alert("O jogo já está salvo, crie um novo jogo");
+        return;
+      }
+
+      dadosExistentes.push([nextContest, ...numerosGeradosOrdenados]);
+      localStorage.setItem('resultadosQuina', JSON.stringify(dadosExistentes));
+
+      const userId = user.id;
+      const lotteryType = 'quina';
+      const betData = [nextContest, ...numerosGeradosOrdenados];
+
+      await saveUserLotteryBet(userId, lotteryType, betData);
+      setMensagemSalvo("Jogo salvo com sucesso!");
+      setTimeout(() => setMensagemSalvo(""), 8000);
+      
     } catch (error) {
       console.error("Erro ao salvar a aposta:", error);
-      alert("Erro ao salvar a aposta. Tente novamente.");
+      
+      if (error.response?.status === 401 || error.message.includes('autenticado') || error.message.includes('login')) {
+        setMensagemErro("Sessão expirada. Redirecionando para login...");
+        setRedirecionando(true);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        router.push('/login');
+      } else {
+        setMensagemErro("Erro ao salvar o jogo. Tente novamente.");
+      }
+    } finally {
+      setRedirecionando(false);
     }
   };
 
@@ -174,13 +213,17 @@ const Quina = () => {
         {(modoEscolha && numerosEscolhidos.length >= 5) || (!modoEscolha && numerosGerados.length >= 5) ? (
           <div>
             <button
-              className="w-full bg-[#260085] text-white font-bold py-2 rounded hover:bg-green-500 transition duration-300 mt-5"
+              className="w-full bg-[#260085] text-white font-bold py-2 rounded hover:bg-[#3c00d3] transition duration-300 mt-5"
               onClick={saveToLocal}
+              disabled={redirecionando}
             >
-              Salvar Jogo
+              {redirecionando ? 'Redirecionando...' : 'Salvar Jogo'}
             </button>
             {mensagemSalvo && (
               <p className="mt-2 text-green-600 font-semibold text-center">{mensagemSalvo}</p>
+            )}
+            {mensagemErro && (
+              <p className="mt-2 text-red-500 font-semibold text-center">{mensagemErro}</p>
             )}
           </div>
         ) : null}
