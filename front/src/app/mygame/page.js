@@ -56,7 +56,7 @@ const MyGame = () => {
 
   // Verifica se deve disparar fogos baseado no tipo de loteria
   const shouldTriggerFireworks = (lotteryType, acertos) => {
-    switch(lotteryType) {
+    switch (lotteryType) {
       case 'mega':
         return acertos > 5;
       case 'lotofacil':
@@ -75,7 +75,7 @@ const MyGame = () => {
       router.push('/login');
       return false;
     }
-    
+
     try {
       const user = JSON.parse(userString);
       if (!user?.id || !user?.token) {
@@ -125,7 +125,7 @@ const MyGame = () => {
       try {
         const user = JSON.parse(localStorage.getItem('USER'));
         const response = await getSavedUserBets(`usergames/${user.id}`, loteriaSelecionada);
-        
+
         if (!response || !Array.isArray(response)) {
           setJogosSalvos([]);
           return;
@@ -134,7 +134,7 @@ const MyGame = () => {
         const jogosSalvosFormatados = response
           .filter(jogo => Array.isArray(jogo))
           .map(jogo => jogo.map(numero => numero.toString()));
-          
+
         setJogosSalvos(jogosSalvosFormatados);
       } catch (err) {
         if (err.response?.status === 401) {
@@ -160,7 +160,7 @@ const MyGame = () => {
     }
 
     try {
-      const resultadoAtual = resultApi.find(concurso => 
+      const resultadoAtual = resultApi.find(concurso =>
         Array.isArray(concurso) && concurso[0] === concursoSelecionado.toString()
       ) || [];
 
@@ -191,7 +191,7 @@ const MyGame = () => {
       {showFireworks && (
         <div className="fixed inset-0 pointer-events-none z-50" />
       )}
-      
+
       <div className="bg-gray-200 p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-full md:max-w-full lg:max-w-screen-xl mt-10 mb-10 z-10">
         <h2 className="text-3xl font-bold mb-5 text-center sm:text-xl">Meus Jogos</h2>
 
@@ -225,9 +225,12 @@ const MyGame = () => {
               disabled={!concursosDisponiveis.length}
             >
               <option value="">Selecione um concurso</option>
-              {concursosDisponiveis.map((concurso) => (
-                <option key={concurso[0]} value={concurso[0]}>{`Concurso ${concurso[0]}`}</option>
-              ))}
+              {Array.from(new Set(concursosDisponiveis.map(concurso => concurso[0])))
+                .map(numeroConcurso => (
+                  <option key={numeroConcurso} value={numeroConcurso}>
+                    {`Concurso ${numeroConcurso}`}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -240,24 +243,22 @@ const MyGame = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
             {acertosPorJogo.map((item, index) => {
               const isPremiado = shouldTriggerFireworks(loteriaSelecionada, item.acertos.length);
-              
+
               return (
-                <div 
-                  key={index} 
-                  className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 ${
-                    isPremiado ? 'ring-4 ring-yellow-400 transform scale-105' : ''
-                  }`}
+                <div
+                  key={index}
+                  className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 ${isPremiado ? 'ring-4 ring-yellow-400 transform scale-105' : ''
+                    }`}
                 >
                   <h3 className="text-lg font-semibold">Concurso: {item.jogo[0]}</h3>
                   <div className="flex flex-wrap justify-center mt-2">
                     {item.jogo.slice(1).map((numero, i) => (
                       <div
                         key={i}
-                        className={`flex items-center justify-center rounded-full h-12 w-12 text-xl m-1 shadow-lg transition-all ${
-                          item.acertos.includes(numero) 
-                            ? 'bg-green-500 text-white border-2 border-green-600 transform scale-110' 
+                        className={`flex items-center justify-center rounded-full h-12 w-12 text-xl m-1 shadow-lg transition-all ${item.acertos.includes(numero)
+                            ? 'bg-green-500 text-white border-2 border-green-600 transform scale-110'
                             : 'bg-purple-600 text-white'
-                        }`}
+                          }`}
                       >
                         {numero}
                       </div>
@@ -265,8 +266,8 @@ const MyGame = () => {
                   </div>
                   <p className="mt-2 text-center font-semibold">
                     Acertos: <span className={
-                      isPremiado 
-                        ? 'text-yellow-500 text-xl font-bold animate-pulse' 
+                      isPremiado
+                        ? 'text-yellow-500 text-xl font-bold animate-pulse'
                         : 'text-gray-700'
                     }>
                       {item.acertos.length}
