@@ -7,7 +7,7 @@ const serviceDrawResults = async (typeLottery) => {
       throw new Error('Tipo de loteria inválido. Use "mega", "lotofacil" ou "quina".');
     }
 
-    const drawresults = await prisma.userGames.findMany({
+    const drawresults = await prisma.bet.findMany({
       where: { game_type: typeLottery },
       orderBy: { createdAt: 'desc' }
     });
