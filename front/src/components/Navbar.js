@@ -1,117 +1,183 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
+// Ícones SVG como componentes internos para um JSX mais limpo
+const MenuIcon = (props) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+const CloseIcon = (props) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+const UserIcon = (props) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
 const Navbar = () => {
   const router = useRouter();
-  const currentPath = usePathname();
+  const pathname = usePathname();
   const [userName, setUserName] = useState(null);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  const dropdownRef = useRef(null);
 
-  // Função para verificar se o usuário está logado e atualizar o estado `userName`
-  const checkUserLoggedIn = () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('USER');
-      if (token) {
-        const user = JSON.parse(token);
-        setUserName(user?.name); // Atualiza o estado com o nome do usuário
-      } else {
-        setUserName(null); // Se não houver token, define o estado como null
-      }
-    }
-  };
-
-  // Verifica o estado do usuário ao carregar o componente
+  // Efeito para fechar o dropdown do usuário ao clicar fora dele
   useEffect(() => {
-    checkUserLoggedIn();
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Verifica o estado do usuário sempre que a rota mudar
+  // Efeito para verificar o login e fechar o menu móvel em mudança de rota
   useEffect(() => {
+    const checkUserLoggedIn = () => {
+      const userJSON = localStorage.getItem('USER');
+      if (userJSON) {
+        try {
+          const user = JSON.parse(userJSON);
+          setUserName(user?.name || 'Usuário');
+        } catch (e) {
+          setUserName(null);
+          localStorage.removeItem('USER');
+        }
+      } else {
+        setUserName(null);
+      }
+    };
+
     checkUserLoggedIn();
-  }, [currentPath]);
+    setMobileMenuOpen(false); // Fecha o menu móvel sempre que a rota muda
+  }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('USER');
-    setUserName(null); // Limpa o estado do usuário
+    setUserName(null);
+    setDropdownOpen(false);
     router.push('/login');
   };
 
+  // Centraliza os links para fácil manutenção e reutilização
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/mega', label: 'Mega-Sena' },
+    { href: '/lotofacil', label: 'Lotofácil' },
+    { href: '/quina', label: 'Quina' },
+    { href: '/mygames', label: 'Meus Jogos' } // Adicionado link para a página de jogos do usuário
+  ];
+  
+  // Componente de link interno para evitar repetição da lógica de estilo
+  const NavLink = ({ href, children, isMobile = false }) => {
+    const isActive = pathname === href;
+    const baseClasses = "px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200";
+    const mobileClasses = isMobile ? "block" : "inline-block";
+    const activeClasses = isActive ? 'bg-sky-700 text-white' : 'text-slate-200 hover:bg-sky-500 hover:text-white';
+    
+    return (
+      <Link href={href} className={`${baseClasses} ${mobileClasses} ${activeClasses}`}>
+        {children}
+      </Link>
+    );
+  };
+
   return (
-    <nav className="container-md min-h-32 bg-sky-600 flex items-center justify-between">
-      {/* Menu para dispositivos desktop */}
-      <div className="px-8 hidden md:flex">
-        <Link href="/" className={`text-slate-200 text-lg pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`}>
-          Home
-        </Link>
-        <Link href="/mega" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/mega' ? 'hidden' : 'default-link'}`}>
-          Mega-Sena
-        </Link>
-        <Link href="/lotofacil" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/lotofacil' ? 'hidden' : 'default-link'}`}>
-          Lotofácil
-        </Link>
-        <Link href="/quina" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/quina' ? 'hidden' : 'default-link'}`}>
-          Quina
-        </Link>
-      </div>
-
-      {/* Botão de Menu Hamburguer (apenas visível em dispositivos móveis) */}
-      <div className="md:hidden flex items-center px-4">
-        <button
-          className="text-slate-200"
-          onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {/* Icone de Menu Hambúrguer usando Tailwind CSS */}
-          <div className="space-y-2">
-            <div className="w-6 h-1 bg-slate-200"></div>
-            <div className="w-6 h-1 bg-slate-200"></div>
-            <div className="w-6 h-1 bg-slate-200"></div>
+    <nav className="bg-sky-600 shadow-lg sticky top-0 z-40">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-40 items-center justify-between">
+          
+          {/* Logo e Links Desktop */}
+          <div className="flex items-center">
+            <Link href="/" className="text-white font-extrabold text-xl flex-shrink-0 mr-10 tracking-tight">
+              Hypersorte
+            </Link>
+            <div className="hidden md:flex md:space-x-4">
+              {navLinks.map(link => (
+                <NavLink key={link.href} href={link.href}>{link.label}</NavLink>
+              ))}
+            </div>
           </div>
-        </button>
-      </div>
 
-      {/* Menu para dispositivos móveis */}
-      <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'} absolute top-0 left-0 w-full bg-sky-600 p-8`}>
-        <Link href="/" className={`text-slate-200 text-lg pl-4 font-bold ${currentPath === '/' ? 'hidden' : ''}`} onClick={() => setMobileMenuOpen(false)}>
-          Home
-        </Link>
-        <Link href="/mega" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/mega' ? 'hidden' : 'default-link'}`} onClick={() => setMobileMenuOpen(false)}>
-          Mega-Sena
-        </Link>
-        <Link href="/lotofacil" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/lotofacil' ? 'hidden' : 'default-link'}`} onClick={() => setMobileMenuOpen(false)}>
-          Lotofácil
-        </Link>
-        <Link href="/quina" className={`text-slate-200 text-lg pl-4 font-mono ${currentPath === '/quina' ? 'hidden' : 'default-link'}`} onClick={() => setMobileMenuOpen(false)}>
-          Quina
-        </Link>
-      </div>
-
-      {/* Menu de Usuário */}
-      <div className="p-8 mr-6">
-        {userName ? (
-          <div className='user-menu'>
-            <button
-              className='text-slate-50 font-mono'
-              onClick={() => setDropdownOpen(!isDropdownOpen)}
-            >
-              <i className="fas fa-user"></i> {/* Ícone de usuário */}
-              {`Olá, ${userName}`}
-            </button>
-            {isDropdownOpen && (
-              <div className='text-slate-50 font-mono'>
-                <button onClick={handleLogout} className='dropdown-item'>Logout</button>
+          {/* Menu do Usuário (Desktop) e Botão de Login */}
+          <div className="hidden md:flex items-center">
+            {userName ? (
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  onClick={() => setDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-slate-100 hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-sky-600 focus:ring-white"
+                >
+                  <UserIcon className="h-5 w-5" />
+                  <span className="font-semibold">Olá, {userName}</span>
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
+            ) : (
+              <NavLink href="/login">Login</NavLink>
             )}
           </div>
-        ) : (
-          <Link href="/login" className={`text-slate-50 text-lg font-mono ${currentPath === '/login' ? 'hover:bg-sky-900' : 'active:bg-sky-700'}`}>
-            Login
-          </Link>
-        )}
+          
+          {/* Botão do Menu Móvel */}
+          <div className="flex md:hidden">
+            <button
+              onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
+              className="inline-flex items-center justify-center rounded-md p-2 text-slate-200 hover:bg-sky-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              aria-controls="mobile-menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <span className="sr-only">Abrir menu principal</span>
+              {isMobileMenuOpen ? <CloseIcon className="block h-6 w-6" /> : <MenuIcon className="block h-6 w-6" />}
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Painel do Menu Móvel */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden" id="mobile-menu">
+          <div className="space-y-1 px-2 pb-3 pt-2">
+            {navLinks.map(link => (
+              <NavLink key={link.href} href={link.href} isMobile={true}>{link.label}</NavLink>
+            ))}
+            
+            <div className="border-t border-sky-700 pt-4 mt-3">
+              {userName ? (
+                  <div className="flex items-center px-3">
+                      <UserIcon className="h-10 w-10 text-slate-200 flex-shrink-0" />
+                      <div className="ml-3">
+                          <div className="text-base font-semibold text-white">{userName}</div>
+                          <button onClick={handleLogout} className="text-sm font-medium text-slate-300 hover:text-white">
+                              Logout
+                          </button>
+                      </div>
+                  </div>
+              ) : (
+                  <NavLink href="/login" isMobile={true}>Login</NavLink>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

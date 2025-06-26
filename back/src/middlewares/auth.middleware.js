@@ -3,7 +3,7 @@ const { verify } = require('jsonwebtoken');
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  console.log('Auth Header:', authHeader); // Adicione este log para depuração
+  // console.log('Auth Header:', authHeader); // Adicione este log para depuração
   
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

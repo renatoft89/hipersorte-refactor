@@ -1,22 +1,156 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getNextContest, saveUserLotteryBet } from '../../services/requests';
 
+// ===================================================================
+// FUNÇÕES UTILITÁRIAS (sem alterações, exceto por um alerta mais amigável)
+// ===================================================================
+const MOLDURA = [1, 2, 3, 4, 5, 6, 10, 11, 15, 16, 20, 21, 22, 23, 24, 25];
+const MIOLO = [7, 8, 9, 12, 13, 14, 17, 18, 19];
+
+const gerarNumerosEstrategicos = (options) => {
+  const defaults = {
+    quantidade: 15,
+    maxNumero: 25,
+    excluir: [],
+    incluir: [],
+    paridade: null,
+    distribuicao: null,
+  };
+  const config = { ...defaults, ...options };
+
+  if (config.incluir.length > config.quantidade) {
+    console.error("Erro: A quantidade de números a incluir é maior que a quantidade total.");
+    return [];
+  }
+
+  const numeros = new Set(config.incluir);
+  const excluidos = new Set(config.excluir);
+
+  let tentativas = 0;
+  while (numeros.size < config.quantidade && tentativas < 5000) {
+    tentativas++;
+    const numeroAleatorio = Math.floor(Math.random() * config.maxNumero) + 1;
+
+    if (numeros.has(numeroAleatorio) || excluidos.has(numeroAleatorio)) {
+      continue;
+    }
+
+    if (config.paridade === 'equilibrado') {
+      const pares = [...numeros].filter(n => n % 2 === 0).length;
+      const impares = numeros.size - pares;
+      const metade = Math.ceil(config.quantidade / 2);
+
+      if (numeroAleatorio % 2 === 0) {
+        if (pares >= metade) continue;
+      } else {
+        if (impares >= metade) continue;
+      }
+    }
+
+    if (config.distribuicao === 'molduraEquilibrada') {
+        const naMoldura = [...numeros].filter(n => MOLDURA.includes(n)).length;
+        const noMiolo = numeros.size - naMoldura;
+        const alvoMoldura = Math.round(config.quantidade * (9.5/15)); 
+        const alvoMiolo = config.quantidade - alvoMoldura;
+
+        if (MOLDURA.includes(numeroAleatorio) && naMoldura >= alvoMoldura) continue;
+        if (MIOLO.includes(numeroAleatorio) && noMiolo >= alvoMiolo) continue;
+    }
+
+    numeros.add(numeroAleatorio);
+  }
+
+  if (numeros.size < config.quantidade) {
+    alert("Atenção: Não foi possível gerar o jogo com as restrições. Um jogo aleatório simples foi gerado.");
+    return gerarNumerosEstrategicos({ quantidade: config.quantidade, maxNumero: config.maxNumero });
+  }
+
+  return Array.from(numeros).sort((a, b) => a - b);
+};
+
+
+// ===================================================================
+// SUB-COMPONENTES REUTILIZÁVEIS
+// ===================================================================
+
+const ToggleSwitch = ({ checked, onChange }) => (
+  <label className="flex items-center cursor-pointer">
+    <div className="relative">
+      <input type="checkbox" className="sr-only" checked={checked} onChange={onChange} />
+      <div className="block bg-slate-300 w-14 h-8 rounded-full transition-colors duration-300"></div>
+      <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ${checked ? 'transform translate-x-6 bg-purple-600' : ''}`}></div>
+    </div>
+    <div className="ml-3 text-slate-700 font-medium">
+      Escolher Números Manualmente
+    </div>
+  </label>
+);
+
+const NumberGrid = ({ selectedNumbers, onSelectNumber }) => (
+  <div className="grid grid-cols-5 gap-2 p-3 bg-slate-100 rounded-lg border border-slate-200">
+    {Array.from({ length: 25 }, (_, i) => i + 1).map((numero) => (
+      <button
+        key={numero}
+        onClick={() => onSelectNumber(numero)}
+        className={`flex items-center justify-center rounded-full font-bold text-lg aspect-square transition-all duration-200 ease-in-out transform
+                    ${selectedNumbers.includes(numero)
+                      ? 'bg-purple-600 text-white shadow-md scale-105'
+                      : 'bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-200 hover:border-slate-400'
+                    }`}
+      >
+        {String(numero).padStart(2, '0')}
+      </button>
+    ))}
+  </div>
+);
+
+const GeneratedNumbersDisplay = ({ numbers }) => (
+  <div className="mt-6">
+    <h3 className="text-lg font-semibold text-center text-slate-800">Seu Jogo Gerado:</h3>
+    <ul className="mt-4 flex flex-wrap justify-center gap-3">
+      {numbers.map((numero, index) => (
+        <li key={index} className="flex items-center justify-center bg-gradient-to-br from-purple-600 to-purple-700 text-white rounded-full font-bold shadow-lg 
+                                  h-14 w-14 text-xl border-2 border-white/50">
+          {String(numero).padStart(2, '0')}
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const AlertMessage = ({ message, type }) => {
+    if (!message) return null;
+    const baseClasses = "mt-4 p-3 rounded-lg text-center font-semibold text-sm";
+    const typeClasses = {
+      success: "bg-emerald-100 text-emerald-800",
+      error: "bg-red-100 text-red-800",
+    };
+    return (
+      <div className={`${baseClasses} ${typeClasses[type]}`} role="alert">
+        {message}
+      </div>
+    );
+};
+
+
+// ===================================================================
+// COMPONENTE PRINCIPAL LOTOFACIL
+// ===================================================================
 const Lotofacil = () => {
   const router = useRouter();
-  const [generatedNumbers, setGeneratedNumbers] = useState([]);
-  const [chosenNumbers, setChosenNumbers] = useState([]);
-  const [savedMessage, setSavedMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isChoosingMode, setIsChoosingMode] = useState(false);
-  const [numberQuantity, setNumberQuantity] = useState(15);
-  const [isLoading, setIsLoading] = useState(false);
+  const [numerosGerados, setNumerosGerados] = useState([]);
+  const [numerosEscolhidos, setNumerosEscolhidos] = useState([]);
+  const [mensagemSucesso, setMensagemSucesso] = useState("");
+  const [mensagemErro, setMensagemErro] = useState("");
+  const [modoEscolha, setModoEscolha] = useState(false);
+  const [quantidadeNumeros, setQuantidadeNumeros] = useState(15);
   const [nextContest, setNextContest] = useState("");
-  const [redirecting, setRedirecting] = useState(false);
+  const [redirecionando, setRedirecionando] = useState(false);
+  const [estrategia, setEstrategia] = useState('aleatoria');
 
-  // Busca o próximo concurso
   useEffect(() => {
     const fetchNextContest = async () => {
       try {
@@ -26,220 +160,164 @@ const Lotofacil = () => {
         console.error("Erro ao buscar o próximo concurso:", error);
       }
     };
-
     fetchNextContest();
   }, []);
 
-  const generateNumbers = () => {
-    setIsLoading(true);
-    setErrorMessage("");
-    setChosenNumbers([]);
-    setSavedMessage("");
+  const handleGerarNumeros = useCallback(() => {
+    setMensagemErro("");
+    setNumerosEscolhidos([]);
+    setMensagemSucesso("");
 
-    setTimeout(() => {
-      const numbers = new Set();
-      while (numbers.size < numberQuantity) {
-        const randomNumber = Math.floor(Math.random() * 25) + 1;
-        numbers.add(randomNumber);
+    const options = {
+      quantidade: Number(quantidadeNumeros),
+      maxNumero: 25,
+      paridade: estrategia === 'equilibrioParImpar' ? 'equilibrado' : null,
+      distribuicao: estrategia === 'equilibrioMoldura' ? 'molduraEquilibrada' : null,
+    };
+    
+    const numbersArray = gerarNumerosEstrategicos(options);
+    setNumerosGerados(numbersArray);
+  }, [quantidadeNumeros, estrategia]);
+
+  const selecionarNumero = (number) => {
+    setMensagemErro("");
+    setNumerosEscolhidos(prev => {
+      if (prev.includes(number)) {
+        return prev.filter(num => num !== number);
       }
-
-      const numbersArray = Array.from(numbers).sort((a, b) => a - b);
-      setGeneratedNumbers(numbersArray);
-      setIsLoading(false);
-    }, 300);
-  };
-
-  const selectNumber = (number) => {
-    if (chosenNumbers.includes(number)) {
-      setChosenNumbers(chosenNumbers.filter(num => num !== number));
-    } else if (chosenNumbers.length < 20) {
-      setChosenNumbers([...chosenNumbers, number]);
-      if (chosenNumbers.length >= 14) {
-        setErrorMessage("");
+      if (prev.length >= 20) {
+        setMensagemErro("Você já escolheu a quantidade máxima de números (20)!");
+        return prev;
       }
-    }
-
-    if (chosenNumbers.length >= 20) {
-      setErrorMessage("Você já escolheu a quantidade máxima de números!");
-    }
+      return [...prev, number].sort((a, b) => a - b);
+    });
   };
 
   const saveToLocal = async () => {
+    setMensagemErro("");
+    setMensagemSucesso("");
+
     try {
-      // Verifica autenticação
       const userData = localStorage.getItem('USER');
-      if (!userData) {
-        setErrorMessage("Você precisa estar logado para salvar. Redirecionando para login...");
-        setRedirecting(true);
+      if (!userData || !JSON.parse(userData)?.id) {
+        setMensagemErro("Você precisa estar logado para salvar. Redirecionando para login...");
+        setRedirecionando(true);
         await new Promise(resolve => setTimeout(resolve, 3000));
         router.push('/login');
         return;
       }
 
-      // Parse dos dados do usuário
-      let user;
-      try {
-        user = JSON.parse(userData);
-      } catch (parseError) {
-        console.error('Erro ao parsear dados do usuário:', parseError);
-        setErrorMessage("Dados inválidos. Redirecionando para login...");
-        setRedirecting(true);
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        router.push('/login');
+      const user = JSON.parse(userData);
+      const numerosASalvar = modoEscolha ? numerosEscolhidos : numerosGerados;
+
+      if (numerosASalvar.length < 15) {
+        setMensagemErro("É necessário ter pelo menos 15 números para salvar.");
         return;
       }
 
-      // Verifica ID do usuário
-      if (!user?.id) {
-        setErrorMessage("Sessão inválida. Redirecionando para login...");
-        setRedirecting(true);
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        router.push('/login');
-        return;
-      }
+      const dadosExistentes = JSON.parse(localStorage.getItem('resultadosLotofacil')) || [];
+      const numerosOrdenados = [...numerosASalvar].sort((a, b) => a - b);
 
-      const existingData = JSON.parse(localStorage.getItem('resultadosLotofacil')) || [];
-      const numbersToSave = isChoosingMode ? [...chosenNumbers] : [...generatedNumbers];
-      const sortedGeneratedNumbers = numbersToSave.sort((a, b) => a - b);
-
-      const existingGame = existingData.find(game => 
-        game.slice(1).sort((a, b) => a - b).toString() === sortedGeneratedNumbers.toString()
+      const jogoExistente = dadosExistentes.find(jogo => 
+        jogo.slice(1).sort((a, b) => a - b).toString() === numerosOrdenados.toString()
       );
 
-      if (existingGame) {
-        alert("Este jogo já foi salvo, crie um novo jogo");
-        return;
+      if (jogoExistente) {
+        throw new Error("Este jogo já foi salvo anteriormente. Gere um novo.");
       }
 
-      existingData.push([nextContest, ...sortedGeneratedNumbers]);
-      localStorage.setItem('resultadosLotofacil', JSON.stringify(existingData));
-
-      const userId = user.id;
-      const lotteryType = 'lotofacil';
-      const betData = [nextContest, ...sortedGeneratedNumbers];
-
-      await saveUserLotteryBet(userId, lotteryType, betData);
-      setSavedMessage("Jogo salvo com sucesso!");
-      setTimeout(() => setSavedMessage(""), 8000);
+      const betData = [nextContest, ...numerosOrdenados];
+      dadosExistentes.push(betData);
+      localStorage.setItem('resultadosLotofacil', JSON.stringify(dadosExistentes));
+      
+      await saveUserLotteryBet(user.id, 'lotofacil', betData);
+      setMensagemSucesso("Jogo salvo com sucesso!");
+      setTimeout(() => setMensagemSucesso(""), 5000);
       
     } catch (error) {
       console.error("Erro ao salvar a aposta:", error);
-      
-      if (error.response?.status === 401 || error.message.includes('autenticado') || error.message.includes('login')) {
-        setErrorMessage("Sessão expirada. Redirecionando para login...");
-        setRedirecting(true);
+      if (error.response?.status === 401 || error.message.includes('autenticado')) {
+        setMensagemErro("Sessão expirada. Redirecionando para login...");
+        setRedirecionando(true);
         await new Promise(resolve => setTimeout(resolve, 3000));
         router.push('/login');
+        return;
       } else {
-        setErrorMessage("Erro ao salvar o jogo. Tente novamente.");
+        setMensagemErro(error.message || "Erro ao salvar o jogo. Tente novamente.");
+        setRedirecionando(false);
       }
-    } finally {
-      setRedirecting(false);
     }
   };
 
-  return (
-    <div className="flex items-center justify-center">
-      <div className="bg-gray-200 p-20 rounded-lg shadow-lg max-w-lg w-full mt-10 mb-10 sm:p-6">
-        <h2 className="text-3xl font-bold mb-5 text-center sm:text-xl">Gerador da Lotofácil</h2>
+  const isSaveButtonEnabled = (modoEscolha && numerosEscolhidos.length >= 15) || (!modoEscolha && numerosGerados.length > 0);
 
-        {/* Próximo Concurso */}
-        <div className="text-center mb-5">
-          <a className="text-gray-700 text-sm sm:text-base font-semibold">
-            Próximo Concurso: <span className="text-lg font-bold text-purple-700">{nextContest}</span>
-          </a>
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-100 font-sans p-4">
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl max-w-xl w-full my-10 border border-slate-200/80">
+        <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Gerador Lotofácil</h2>
+            <p className="text-slate-500 mt-2">
+                Próximo Concurso: <span className="font-bold text-purple-600 text-lg">{nextContest || 'Carregando...'}</span>
+            </p>
         </div>
 
-        {/* Modo de escolha de números */}
-        <label className="flex items-center mb-5">
-          <input 
-            type="checkbox" 
-            checked={isChoosingMode} 
-            onChange={() => setIsChoosingMode(!isChoosingMode)} 
-            className="mr-2"
-          />
-          <span className="text-gray-700 text-lg">Escolher Números</span>
-        </label>
+        <div className="flex justify-center mb-8">
+            <ToggleSwitch checked={modoEscolha} onChange={() => setModoEscolha(!modoEscolha)} />
+        </div>
 
-        {isChoosingMode ? (
+        {modoEscolha ? (
           <div>
-            <div className="text-center mb-5">
-              <h3 className="text-lg font-semibold">Números Escolhidos: {chosenNumbers.length}/20</h3>
-              {chosenNumbers.length < 15 && <span className="text-red-500">Escolha pelo menos 15 números!</span>}
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-slate-700">
+                Números Escolhidos: <span className="font-bold text-purple-600">{numerosEscolhidos.length}</span>/20
+              </h3>
+              {numerosEscolhidos.length > 0 && numerosEscolhidos.length < 15 && 
+                <p className="text-sm text-amber-600">Escolha pelo menos 15 números para poder salvar.</p>
+              }
             </div>
-
-            <div className="grid grid-cols-5 gap-2">
-              {Array.from({ length: 25 }, (_, index) => index + 1).map((number) => (
-                <button
-                  key={number}
-                  onClick={() => selectNumber(number)}
-                  className={`h-20 w-20 rounded-full text-3xl font-bold m-2 transition duration-300 
-                    ${chosenNumbers.includes(number) ? 'bg-green-500 text-white' : 'bg-gray-300 text-black hover:bg-gray-400'}`}
-                >
-                  {number}
-                </button>
-              ))}
-            </div>
+            <NumberGrid selectedNumbers={numerosEscolhidos} onSelectNumber={selecionarNumero} />
           </div>
         ) : (
-          <div>
-            <label className="block text-center mb-5">
-              <span className="text-gray-700 text-lg mb-1 block sm:text-sm">Selecione quantos números deseja gerar:</span>
-              <select 
-                value={numberQuantity}
-                onChange={(e) => setNumberQuantity(parseInt(e.target.value))}
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-500"
-              >
-                <option value={15}>15 Números</option>
-                <option value={16}>16 Números</option>
-                <option value={17}>17 Números</option>
-                <option value={18}>18 Números</option>
-                <option value={19}>19 Números</option>
-                <option value={20}>20 Números</option>
-              </select>
-            </label>
-
-            <button
-              className="w-full bg-purple-600 text-white font-bold py-2 rounded hover:bg-purple-500 transition duration-300 text-lg sm:py-1 sm:text-base"
-              onClick={generateNumbers}
-              disabled={isLoading}
-            >
-              {isLoading ? "Carregando..." : "Gerar Números"}
-            </button>
-
-            <div className="mt-5">
-              <h3 className="text-lg font-semibold">Números Gerados:</h3>
-              <ul className="mt-2 flex flex-wrap justify-center">
-                {generatedNumbers.map((number, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center justify-center bg-purple-600 text-white rounded-full h-20 w-20 text-3xl m-2 shadow-lg transition-transform transform hover:scale-110 hover:shadow-xl duration-300"
-                  >
-                    {number}
-                  </li>
-                ))}
-              </ul>
+          <div className="space-y-6">
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="estrategia" className="block text-sm font-medium text-slate-600 mb-1">Estratégia:</label>
+                <select id="estrategia" value={estrategia} onChange={(e) => setEstrategia(e.target.value)}
+                  className="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition">
+                  <option value="aleatoria">Aleatória Simples</option>
+                  <option value="equilibrioParImpar">Equilíbrio Par/Ímpar</option>
+                  <option value="equilibrioMoldura">Equilíbrio Moldura/Miolo</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="quantidade" className="block text-sm font-medium text-slate-600 mb-1">Quantidade:</label>
+                <select id="quantidade" value={quantidadeNumeros} onChange={(e) => setQuantidadeNumeros(parseInt(e.target.value))}
+                  className="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition">
+                  {Array.from({ length: 6 }, (_, i) => i + 15).map(num => (
+                    <option key={num} value={num}>{num} Números</option>
+                  ))}
+                </select>
+              </div>
             </div>
+            <button
+              className="w-full bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-500 transition-all duration-300 text-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              onClick={handleGerarNumeros}>
+              Gerar Jogo
+            </button>
+            {numerosGerados.length > 0 && <GeneratedNumbersDisplay numbers={numerosGerados} />}
           </div>
         )}
 
-        {(isChoosingMode && chosenNumbers.length >= 15) || (!isChoosingMode && generatedNumbers.length >= 15) ? (
-          <div>
+        <div className="mt-8 border-t border-slate-200 pt-6">
             <button
-              className="w-full bg-purple-600 text-white font-bold py-2 rounded hover:bg-purple-500 transition duration-300 mt-5"
-              onClick={saveToLocal}
-              disabled={redirecting}
-            >
-              {redirecting ? 'Redirecionando...' : 'Salvar Jogo'}
+                className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none"
+                onClick={saveToLocal}
+                disabled={!isSaveButtonEnabled || redirecionando}>
+                {redirecionando ? 'Redirecionando...' : 'Salvar Jogo'}
             </button>
-            {savedMessage && (
-              <p className="mt-2 text-purple-600 font-semibold text-center">{savedMessage}</p>
-            )}
-            {errorMessage && (
-              <p className="mt-2 text-red-500 font-semibold text-center">{errorMessage}</p>
-            )}
-          </div>
-        ) : null}
+            <AlertMessage message={mensagemSucesso} type="success" />
+            <AlertMessage message={mensagemErro} type="error" />
+        </div>
       </div>
     </div>
   );

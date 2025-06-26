@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: `http://localhost:${process.env.PORT || '3001'}`,
+  baseURL: `http://localhost:${process.env.PORT || '8080'}`,
   apiEndPoint: `https://apiloterias.com.br/app/v2/resultado?loteria=lotofacil&token=kJdfLjd38Jai2ek&concurso=ultimos1`
 });
 
